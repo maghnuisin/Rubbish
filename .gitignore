@@ -1,0 +1,15 @@
+# Build output (recreated by CMake; large)
+build/
+cmake-build-*/
+out/
+
+# macOS / Windows clutter
+.DS_Store
+Thumbs.db
+
+# Editor / IDE files
+.vscode/
+.idea/
+*.xcodeproj/
+*.xcworkspace/
+.vs/
