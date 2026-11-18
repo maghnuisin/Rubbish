@@ -5,10 +5,12 @@
 #include "FiltersPanel.h"
 #include "LevelMeter.h"
 #include "OutputPanel.h"
+#include "TwistPanel.h"
 
 namespace rubbish
 {
     /** Everything in the window, laid out at one fixed design size:
+        the Twist strip across the top, then
         In meter | Drive | swap | Filters | Output (with Out meter).
         The editor scales this whole component up or down as the window resizes,
         so text, knobs and spacing always keep their proportions. */
@@ -17,18 +19,21 @@ namespace rubbish
     public:
         MainLayout (juce::AudioProcessorValueTreeState& state,
                     LevelMeterSource& inputLevel,
-                    LevelMeterSource& outputLevel);
+                    LevelMeterSource& outputLevel,
+                    TwistDisplaySource& twistPositions);
 
         void resized() override;
 
         static constexpr int designWidth = 1020;
-        static constexpr int designHeight = 560;
+        static constexpr int twistHeight = 360;
+        static constexpr int designHeight = 560 + twistHeight;
 
     private:
         void showFilterOrder (float orderIndex);
 
         static constexpr int panelGap = 10;
 
+        TwistPanel twistPanel;
         LevelMeter inputMeter;
         DrivePanel drivePanel;
         FilterOrderSwapButton swapButton;

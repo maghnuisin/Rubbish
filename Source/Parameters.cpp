@@ -1,4 +1,5 @@
 #include "Parameters.h"
+#include "dsp/TwistClock.h"
 
 #include <cmath>
 
@@ -134,10 +135,102 @@ namespace rubbish
                 juce::StringArray { "Tape", "Console", "Tube", "Synth" },
                 0);
         }
+
+        // ---- Twist (version 2) ----
+
+        struct TwistBellDefaults
+        {
+            float freqHz, gainDb, q;
+            int syncSpeedIndex;
+            float freeSpeedHz, movePercent, startDegrees;
+        };
+
+        // Bell 1 / 2 / 3 defaults from prd.md: boost, cut, boost, moving at different speeds.
+        constexpr TwistBellDefaults twistDefaults[numTwistBells] {
+            { 200.0f,  12.0f, 0.5f, 12, 0.5f,  40.0f,   0.0f }, // 1 bar
+            { 700.0f, -15.0f, 0.5f, 13, 0.3f, -40.0f, 120.0f }, // 2 bars
+            { 2000.0f, 12.0f, 0.5f, 10, 0.8f,  30.0f, 240.0f }  // 1/2
+        };
+
+        juce::ParameterID twistID (const juce::String& id)
+        {
+            return juce::ParameterID { id, twistParameterVersion };
+        }
+
+        juce::String formatQ (float value, int)
+        {
+            return juce::String (value, 2);
+        }
+
+        juce::String formatHertz (float value, int)
+        {
+            return juce::String (value, value < 1.0f ? 2 : 1) + " Hz";
+        }
+
+        juce::String formatDegrees (float value, int)
+        {
+            return juce::String (juce::roundToInt (value)) + juce::String::charToString (static_cast<juce::juce_wchar> (0x00b0));
+        }
+
+        // Log-style travel, so small values get as much knob as large ones.
+        juce::NormalisableRange<float> makeLogRange (float minimum, float maximum, float interval)
+        {
+            juce::NormalisableRange<float> range (minimum, maximum, interval);
+            range.setSkewForCentre (std::sqrt (minimum * maximum));
+            return range;
+        }
+
+        std::unique_ptr<juce::RangedAudioParameter> makeTwistFloat (const juce::String& id, const juce::String& name,
+                                                                    juce::NormalisableRange<float> range, float defaultValue,
+                                                                    const juce::String& unit,
+                                                                    juce::String (*format) (float, int))
+        {
+            return std::make_unique<juce::AudioParameterFloat> (
+                twistID (id), name, range, defaultValue,
+                juce::AudioParameterFloatAttributes().withLabel (unit).withStringFromValueFunction (format));
+        }
+
+        std::unique_ptr<juce::AudioProcessorParameterGroup> makeTwistBellGroup (int bellIndex)
+        {
+            const auto ids = getTwistBellIDs (bellIndex);
+            const auto& d = twistDefaults[bellIndex];
+            const auto prefix = "Bell " + juce::String (bellIndex + 1) + " ";
+
+            return std::make_unique<juce::AudioProcessorParameterGroup> (
+                "bell" + juce::String (bellIndex + 1), prefix.trim(), "|",
+                makeTwistFloat (ids.freq, prefix + "Freq", makeFrequencyRange (20.0f, 20000.0f), d.freqHz, "Hz", formatFrequency),
+                makeTwistFloat (ids.gain, prefix + "Gain", { -24.0f, 24.0f, 0.01f }, d.gainDb, "dB", formatDecibels),
+                makeTwistFloat (ids.q, prefix + "Q", makeLogRange (0.1f, 10.0f, 0.001f), d.q, "", formatQ),
+                std::make_unique<juce::AudioParameterChoice> (twistID (ids.shape), prefix + "Shape", twistShapeNames, 0),
+                std::make_unique<juce::AudioParameterChoice> (twistID (ids.speedSync), prefix + "Speed (Sync)",
+                                                              twistSyncSpeedNames, d.syncSpeedIndex),
+                makeTwistFloat (ids.speedFree, prefix + "Speed (Free)", makeLogRange (0.01f, 10.0f, 0.001f),
+                                d.freeSpeedHz, "Hz", formatHertz),
+                makeTwistFloat (ids.move, prefix + "Move", { -100.0f, 100.0f, 0.1f }, d.movePercent, "%", formatSignedPercent),
+                makeTwistFloat (ids.start, prefix + "Start", { 0.0f, 360.0f, 1.0f }, d.startDegrees, "deg", formatDegrees));
+        }
+
+        void addTwistParameters (juce::AudioProcessorValueTreeState::ParameterLayout& layout)
+        {
+            layout.add (std::make_unique<juce::AudioParameterBool> (twistID (ParamIDs::twist), "Twist", false),
+                        std::make_unique<juce::AudioParameterBool> (twistID (ParamIDs::twistSync), "Twist Sync", true));
+
+            for (int bell = 0; bell < numTwistBells; ++bell)
+                layout.add (makeTwistBellGroup (bell));
+        }
+    }
+
+    TwistBellIDs getTwistBellIDs (int bellIndex)
+    {
+        jassert (bellIndex >= 0 && bellIndex < numTwistBells);
+        const auto prefix = "bell" + juce::String (bellIndex + 1);
+        return { prefix + "Freq", prefix + "Gain", prefix + "Q", prefix + "Shape",
+                 prefix + "SpeedSync", prefix + "SpeedFree", prefix + "Move", prefix + "Start" };
     }
 
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
     {
+        jassert (twistSyncSpeedNames.size() == TwistClock::numSyncSpeeds);
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add (makeDrive(), makePush(), makeCharacter(),
                     makeFrequency (ParamIDs::cleanLow, "Clean Low", 20.0f, 500.0f, 20.0f));
@@ -155,6 +248,8 @@ namespace rubbish
                     makePercent (ParamIDs::mix, "Mix", 100.0f),
                     makeOutput(),
                     makeToggle (ParamIDs::delta, "Delta", false));
+
+        addTwistParameters (layout);
         return layout;
     }
 }

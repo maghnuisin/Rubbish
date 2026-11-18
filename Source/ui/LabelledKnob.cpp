@@ -4,7 +4,7 @@ namespace rubbish
 {
     namespace
     {
-        juce::RangedAudioParameter& getParameter (juce::AudioProcessorValueTreeState& state, const char* id)
+        juce::RangedAudioParameter& getParameter (juce::AudioProcessorValueTreeState& state, const juce::String& id)
         {
             auto* parameter = state.getParameter (id);
             jassert (parameter != nullptr); // a parameter ID is missing from createParameterLayout()
@@ -17,12 +17,13 @@ namespace rubbish
         }
     }
 
-    LabelledKnob::LabelledKnob (juce::AudioProcessorValueTreeState& state, const char* parameterId)
+    LabelledKnob::LabelledKnob (juce::AudioProcessorValueTreeState& state, const juce::String& parameterId,
+                                const juce::String& displayName)
         : attachment (state, parameterId, knob)
     {
         const auto& parameter = getParameter (state, parameterId);
 
-        nameLabel.setText (parameter.getName (64), juce::dontSendNotification);
+        nameLabel.setText (displayName.isNotEmpty() ? displayName : parameter.getName (64), juce::dontSendNotification);
         nameLabel.setJustificationType (juce::Justification::centred);
         addAndMakeVisible (nameLabel);
 

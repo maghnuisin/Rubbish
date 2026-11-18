@@ -10,7 +10,8 @@ namespace
 
 RubbishAudioProcessorEditor::RubbishAudioProcessorEditor (RubbishAudioProcessor& owner)
     : AudioProcessorEditor (owner),
-      layout (owner.getValueTreeState(), owner.getInputLevel(), owner.getOutputLevel())
+      layout (owner.getValueTreeState(), owner.getInputLevel(), owner.getOutputLevel(),
+              owner.getTwistDisplaySource())
 {
     configureColours (lookAndFeel);
     setLookAndFeel (&lookAndFeel);

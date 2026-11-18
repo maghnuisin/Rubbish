@@ -39,6 +39,7 @@ target_sources(Rubbish PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/Parameters.cpp
+    Source/TwistParameterReader.cpp
     Source/dsp/Waveshapers.cpp
     Source/dsp/CharacterShaper.cpp
     Source/dsp/DistortionStage.cpp
@@ -53,6 +54,10 @@ target_sources(Rubbish PRIVATE
     Source/dsp/DynamicsRestore.cpp
     Source/dsp/SafetyLimiter.cpp
     Source/dsp/OutputSection.cpp
+    Source/dsp/TwistLfo.cpp
+    Source/dsp/TwistClock.cpp
+    Source/dsp/TwistBell.cpp
+    Source/dsp/TwistStage.cpp
     Source/ui/ChoiceButtonGroup.cpp
     Source/ui/LabelledKnob.cpp
     Source/ui/FineDragSlider.cpp
@@ -63,6 +68,9 @@ target_sources(Rubbish PRIVATE
     Source/ui/MainLayout.cpp
     Source/ui/LevelMeter.cpp
     Source/ui/OutputPanel.cpp
+    Source/ui/TwistBellControls.cpp
+    Source/ui/TwistPanel.cpp
+    Source/ui/TwistDisplay.cpp
 )
 
 target_include_directories(Rubbish PRIVATE Source)

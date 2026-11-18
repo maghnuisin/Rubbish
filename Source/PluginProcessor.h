@@ -9,6 +9,9 @@
 #include "dsp/LevelMeterSource.h"
 #include "dsp/LoudnessTracker.h"
 #include "dsp/OutputSection.h"
+#include "dsp/TwistDisplaySource.h"
+#include "dsp/TwistStage.h"
+#include "TwistParameterReader.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -48,11 +51,17 @@ public:
     rubbish::LevelMeterSource& getInputLevel() noexcept { return inputLevel; }
     rubbish::LevelMeterSource& getOutputLevel() noexcept { return outputLevel; }
 
+    /** Read-only live bell positions for the Twist display. */
+    rubbish::TwistDisplaySource& getTwistDisplaySource() noexcept { return twistDisplay; }
+
 private:
     void updateDistortionSettings() noexcept;
     void updateFilterSettings() noexcept;
     void updateOutputSettings() noexcept;
     void updateSplitAndDynamicsSettings() noexcept;
+    void updateTwistSettings() noexcept;
+    void updateTwistTransport() noexcept;
+    void publishTwistPositions() noexcept;
     void updateAllSettings() noexcept;
     void processChunk (juce::dsp::AudioBlock<float>& block) noexcept;
     rubbish::FilterOrder getRequestedFilterOrder() const noexcept;
@@ -77,6 +86,7 @@ private:
     std::atomic<float>& dynamicsRestoreParam;
     std::atomic<float>& spreadParam;
     std::atomic<float>& deltaParam;
+    rubbish::TwistParameterReader twistParams;
 
     rubbish::LoudnessTracker inputLoudness;
     rubbish::CleanLowSplitter cleanLow;
@@ -84,10 +94,12 @@ private:
     rubbish::DistortionStage distortion;
     rubbish::FilterSection filters;
     rubbish::FilterOrderSwitch filterOrderSwitch;
+    rubbish::TwistStage twist;
     rubbish::DynamicsRestore dynamicsRestore;
     rubbish::OutputSection outputSection;
     rubbish::LevelMeterSource inputLevel;
     rubbish::LevelMeterSource outputLevel;
+    rubbish::TwistDisplaySource twistDisplay;
 
     size_t maxChunkSize = 0;
 

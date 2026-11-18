@@ -32,7 +32,8 @@ RubbishAudioProcessor::RubbishAudioProcessor()
       filterFollowParam (getRawParameter (parameters, rubbish::ParamIDs::filterFollow)),
       dynamicsRestoreParam (getRawParameter (parameters, rubbish::ParamIDs::dynamicsRestore)),
       spreadParam (getRawParameter (parameters, rubbish::ParamIDs::spread)),
-      deltaParam (getRawParameter (parameters, rubbish::ParamIDs::delta))
+      deltaParam (getRawParameter (parameters, rubbish::ParamIDs::delta)),
+      twistParams (parameters)
 {
 }
 
@@ -51,6 +52,7 @@ void RubbishAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     filterFollow.prepare (sampleRate, spec.maximumBlockSize);
     filters.prepare (spec);
     filterOrderSwitch.prepare (sampleRate);
+    twist.prepare (spec);
     dynamicsRestore.prepare (spec, latency);
     outputSection.prepare (spec, latency);
 
@@ -75,6 +77,7 @@ void RubbishAudioProcessor::resetProcessing()
     distortion.reset();
     filters.reset();
     filterOrderSwitch.reset (getRequestedFilterOrder());
+    twist.reset();
     outputSection.reset();
 }
 
@@ -113,7 +116,46 @@ void RubbishAudioProcessor::updateAllSettings() noexcept
     updateDistortionSettings();
     updateFilterSettings();
     updateSplitAndDynamicsSettings();
+    updateTwistSettings();
     updateOutputSettings();
+}
+
+void RubbishAudioProcessor::updateTwistSettings() noexcept
+{
+    twist.setEnabled (twistParams.isEnabled());
+    twist.setSynced (twistParams.isSynced());
+
+    for (int bell = 0; bell < rubbish::TwistStage::numBells; ++bell)
+        twist.setBell (bell, twistParams.readBell (bell));
+}
+
+void RubbishAudioProcessor::publishTwistPositions() noexcept
+{
+    for (int bell = 0; bell < rubbish::TwistStage::numBells; ++bell)
+        twistDisplay.publishFrequency (bell, twist.getCurrentFrequencyHz (bell));
+}
+
+// Twist's Sync follows the DAW's tempo and song position.
+void RubbishAudioProcessor::updateTwistTransport() noexcept
+{
+    rubbish::TwistTransport transport;
+
+    if (auto* playHead = getPlayHead())
+    {
+        if (const auto position = playHead->getPosition())
+        {
+            transport.bpm = position->getBpm().orFallback (120.0);
+            transport.isPlaying = position->getIsPlaying();
+
+            if (const auto ppq = position->getPpqPosition())
+                transport.songPositionBeats = *ppq;
+
+            if (const auto timeSignature = position->getTimeSignature())
+                transport.quarterNotesPerBar = 4.0 * timeSignature->numerator / juce::jmax (1, timeSignature->denominator);
+        }
+    }
+
+    twist.setTransport (transport);
 }
 
 void RubbishAudioProcessor::updateFilterSettings() noexcept
@@ -166,6 +208,7 @@ void RubbishAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
         buffer.clear (ch, 0, buffer.getNumSamples());
 
     updateAllSettings();
+    updateTwistTransport();
 
     // Hosts occasionally send more samples than promised in prepareToPlay(),
     // so work through the buffer in pieces everything was sized for.
@@ -184,7 +227,7 @@ void RubbishAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     }
 }
 
-// Signal flow follows prd.md: Clean Low split -> distortion and filters ->
+// Signal flow follows prd.md: Clean Low split -> distortion and filters -> Twist ->
 // recombine low band -> Dynamics Restore -> Auto Gain -> Mix -> Output -> limiter.
 void RubbishAudioProcessor::processChunk (juce::dsp::AudioBlock<float>& block) noexcept
 {
@@ -196,6 +239,8 @@ void RubbishAudioProcessor::processChunk (juce::dsp::AudioBlock<float>& block) n
                                                                             block.getNumSamples());
     cleanLow.split (block);
     processDistortionAndFilters (block, highCutMultipliers);
+    twist.process (block);
+    publishTwistPositions();
     cleanLow.recombine (block);
 
     dynamicsRestore.process (block, inputLoudness.getEnvelope());

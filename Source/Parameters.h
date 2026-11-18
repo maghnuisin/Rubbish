@@ -24,9 +24,30 @@ namespace rubbish
         inline constexpr auto mix         = "mix";
         inline constexpr auto output      = "output";
         inline constexpr auto delta       = "delta";
+
+        inline constexpr auto twist     = "twist";
+        inline constexpr auto twistSync = "twistSync";
     }
 
+    inline constexpr int numTwistBells = 3;
+
+    /** IDs for one Twist bell's parameters, e.g. "bell1Freq". bellIndex is 0-based. */
+    struct TwistBellIDs
+    {
+        juce::String freq, gain, q, shape, speedSync, speedFree, move, start;
+    };
+
+    TwistBellIDs getTwistBellIDs (int bellIndex);
+
     inline constexpr int parameterVersion = 1;
+    inline constexpr int twistParameterVersion = 2; // parameters added in version 2
+
+    /** Speed (Sync on) choices, shortest to longest. T = triplet, D = dotted.
+        Must match the order of TwistClock's cycle lengths. */
+    inline const juce::StringArray twistSyncSpeedNames { "1/16T", "1/16", "1/16D", "1/8T", "1/8", "1/8D",
+                                                         "1/4T", "1/4", "1/4D", "1/2T", "1/2", "1/2D",
+                                                         "1 bar", "2 bars", "4 bars", "8 bars" };
+    inline const juce::StringArray twistShapeNames { "Smooth", "Triangle", "Ramp", "Random wander" };
     inline constexpr float pushBoostDb = 20.0f;
 
     /** Every plugin parameter, with ranges and defaults taken from prd.md. */

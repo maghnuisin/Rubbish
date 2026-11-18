@@ -6,8 +6,10 @@ namespace rubbish
 {
     MainLayout::MainLayout (juce::AudioProcessorValueTreeState& state,
                             LevelMeterSource& inputLevel,
-                            LevelMeterSource& outputLevel)
-        : inputMeter (inputLevel, "In"),
+                            LevelMeterSource& outputLevel,
+                            TwistDisplaySource& twistPositions)
+        : twistPanel (state, twistPositions),
+          inputMeter (inputLevel, "In"),
           drivePanel (state),
           swapButton (*state.getParameter (ParamIDs::filterOrder)),
           filtersPanel (state),
@@ -15,7 +17,7 @@ namespace rubbish
           filterOrderWatcher (*state.getParameter (ParamIDs::filterOrder),
                               [this] (float orderIndex) { showFilterOrder (orderIndex); })
     {
-        for (auto* child : std::initializer_list<juce::Component*> { &inputMeter, &drivePanel, &swapButton,
+        for (auto* child : std::initializer_list<juce::Component*> { &twistPanel, &inputMeter, &drivePanel, &swapButton,
                                                                      &filtersPanel, &outputPanel })
             addAndMakeVisible (child);
 
@@ -31,6 +33,8 @@ namespace rubbish
     void MainLayout::resized()
     {
         auto area = getLocalBounds().reduced (panelGap);
+        twistPanel.setBounds (area.removeFromTop (twistHeight - panelGap));
+        area.removeFromTop (panelGap);
         inputMeter.setBounds (area.removeFromLeft (LevelMeter::preferredWidth)
                                   .withTrimmedTop (panelStyle::titleHeight)
                                   .withTrimmedBottom (panelStyle::padding));

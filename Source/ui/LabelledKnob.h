@@ -15,7 +15,9 @@ namespace rubbish
     class LabelledKnob final : public juce::Component
     {
     public:
-        LabelledKnob (juce::AudioProcessorValueTreeState& state, const char* parameterId);
+        /** displayName replaces the parameter's own name above the knob, if given. */
+        LabelledKnob (juce::AudioProcessorValueTreeState& state, const juce::String& parameterId,
+                      const juce::String& displayName = {});
 
         void resized() override;
 
