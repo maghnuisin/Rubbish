@@ -62,7 +62,7 @@ namespace rubbish
         const auto published = source.getFrequency (bellIndex);
         const auto liveHz = isTwistOn() && published > 0.0f ? published : homeHz;
 
-        return { homeHz, liveHz, readValue (*p.gain), readValue (*p.q), readValue (*p.move) * 0.01f };
+        return { homeHz, liveHz, readValue (*p.gain), twistQPercentToQ (readValue (*p.q)), readValue (*p.move) * 0.01f };
     }
 
     juce::Rectangle<float> TwistDisplay::getPlotArea() const
@@ -272,8 +272,10 @@ namespace rubbish
         auto& q = *bells[static_cast<size_t> (bell)].q;
         const auto step = wheel.isReversed ? -wheel.deltaY : wheel.deltaY;
 
+        constexpr float percentPerScroll = 40.0f; // one wheel notch moves Q by roughly 4%
+
         q.beginChangeGesture();
-        setValue (q, readValue (q) * std::exp2 (step * 2.0f));
+        setValue (q, juce::jlimit (0.0f, 100.0f, readValue (q) + step * percentPerScroll));
         q.endChangeGesture();
     }
 }

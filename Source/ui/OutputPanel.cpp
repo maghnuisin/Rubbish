@@ -5,7 +5,7 @@
 namespace rubbish
 {
     OutputPanel::OutputPanel (juce::AudioProcessorValueTreeState& state, LevelMeterSource& outputLevel)
-        : dynamicsRestoreKnob (state, ParamIDs::dynamicsRestore),
+        : dynamicsRestoreKnob (state, ParamIDs::dynamicsRestore, "Dyn. Restore"),
           spreadKnob (state, ParamIDs::spread),
           mixKnob (state, ParamIDs::mix),
           outputKnob (state, ParamIDs::output),
@@ -40,11 +40,12 @@ namespace rubbish
 
     void OutputPanel::layOutKnobs (juce::Rectangle<int> area)
     {
-        auto top = area.removeFromTop (area.getHeight() / 2);
-        dynamicsRestoreKnob.setBounds (top.removeFromLeft (top.getWidth() / 2).reduced (4));
-        spreadKnob.setBounds (top.reduced (4));
-        mixKnob.setBounds (area.removeFromLeft (area.getWidth() / 2).reduced (4));
-        outputKnob.setBounds (area.reduced (4));
+        const auto knobWidth = area.getWidth() / 4;
+
+        for (auto* knob : { &dynamicsRestoreKnob, &spreadKnob, &mixKnob })
+            knob->setBounds (area.removeFromLeft (knobWidth).reduced (3, 0));
+
+        outputKnob.setBounds (area.reduced (3, 0));
     }
 
     void OutputPanel::layOutToggles (juce::Rectangle<int> area)

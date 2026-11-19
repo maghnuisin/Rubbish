@@ -39,6 +39,16 @@ namespace rubbish
 
     TwistBellIDs getTwistBellIDs (int bellIndex);
 
+    /** Twist's Q knob is shown as 0-100%: 0% = Q 0.20 (widest), 100% = Q 1.00 (narrowest). */
+    inline constexpr float twistMinQ = 0.2f;
+    inline constexpr float twistMaxQ = 1.0f;
+
+    inline float twistQPercentToQ (float percent) noexcept
+    {
+        const auto proportion = juce::jlimit (0.0f, 1.0f, percent * 0.01f);
+        return twistMinQ + proportion * (twistMaxQ - twistMinQ);
+    }
+
     inline constexpr int parameterVersion = 1;
     inline constexpr int twistParameterVersion = 2; // parameters added in version 2
 

@@ -25,6 +25,7 @@ namespace rubbish
 
         nameLabel.setText (displayName.isNotEmpty() ? displayName : parameter.getName (64), juce::dontSendNotification);
         nameLabel.setJustificationType (juce::Justification::centred);
+        nameLabel.setMinimumHorizontalScale (0.6f); // squeeze long names rather than cut them off
         addAndMakeVisible (nameLabel);
 
         knob.setSliderStyle (juce::Slider::RotaryVerticalDrag);
@@ -33,8 +34,23 @@ namespace rubbish
         addAndMakeVisible (knob);
     }
 
+    void LabelledKnob::useRowStyle()
+    {
+        rowStyle = true;
+        nameLabel.setVisible (false);
+        resized();
+    }
+
     void LabelledKnob::resized()
     {
+        if (rowStyle)
+        {
+            knob.setTextBoxStyle (juce::Slider::TextBoxRight, false, juce::jmin (rowValueBoxWidth, getWidth() / 2),
+                                  valueBoxHeight);
+            knob.setBounds (getLocalBounds());
+            return;
+        }
+
         auto area = getLocalBounds();
         nameLabel.setBounds (area.removeFromTop (nameHeight));
         knob.setTextBoxStyle (juce::Slider::TextBoxBelow, false, juce::jmin (80, getWidth()), valueBoxHeight);

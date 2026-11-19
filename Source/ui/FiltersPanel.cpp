@@ -24,16 +24,11 @@ namespace rubbish
     void FiltersPanel::resized()
     {
         auto area = panelStyle::getContentArea (getLocalBounds());
+        const auto knobWidth = area.getWidth() / 5;
 
-        const auto rowHeight = area.getHeight() / 3;
-        placeKnobPair (area.removeFromTop (rowHeight), lowCutKnob, lowPeakKnob);
-        placeKnobPair (area.removeFromTop (rowHeight), highCutKnob, highPeakKnob);
-        filterFollowKnob.setBounds (area.withSizeKeepingCentre (area.getWidth() / 2, area.getHeight()).reduced (4));
-    }
+        for (auto* knob : { &lowCutKnob, &lowPeakKnob, &highCutKnob, &highPeakKnob })
+            knob->setBounds (area.removeFromLeft (knobWidth).reduced (3, 0));
 
-    void FiltersPanel::placeKnobPair (juce::Rectangle<int> row, LabelledKnob& cutoff, LabelledKnob& peak)
-    {
-        cutoff.setBounds (row.removeFromLeft (row.getWidth() / 2).reduced (4));
-        peak.setBounds (row.reduced (4));
+        filterFollowKnob.setBounds (area.reduced (3, 0));
     }
 }

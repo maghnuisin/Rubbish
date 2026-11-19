@@ -58,7 +58,6 @@ target_sources(Rubbish PRIVATE
     Source/dsp/TwistClock.cpp
     Source/dsp/TwistBell.cpp
     Source/dsp/TwistStage.cpp
-    Source/ui/ChoiceButtonGroup.cpp
     Source/ui/LabelledKnob.cpp
     Source/ui/FineDragSlider.cpp
     Source/ui/PanelStyle.cpp

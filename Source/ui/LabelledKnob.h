@@ -19,11 +19,18 @@ namespace rubbish
         LabelledKnob (juce::AudioProcessorValueTreeState& state, const juce::String& parameterId,
                       const juce::String& displayName = {});
 
+        /** Small version for a row of controls under shared column names:
+            no name above, value box to the right of the knob. */
+        void useRowStyle();
+
         void resized() override;
 
     private:
         static constexpr int nameHeight = 20;
         static constexpr int valueBoxHeight = 20;
+        static constexpr int rowValueBoxWidth = 62;
+
+        bool rowStyle = false;
 
         juce::Label nameLabel;
         FineDragSlider knob;

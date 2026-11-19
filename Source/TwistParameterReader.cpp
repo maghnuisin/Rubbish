@@ -56,7 +56,7 @@ namespace rubbish
         TwistBellSettings settings;
         settings.frequencyHz = p.frequency->load();
         settings.gainDb = p.gain->load();
-        settings.q = p.q->load();
+        settings.q = twistQPercentToQ (p.q->load());
         settings.shape = static_cast<TwistShape> (shapeIndex);
         settings.syncSpeedIndex = juce::roundToInt (p.speedSync->load());
         settings.freeSpeedHz = p.speedFree->load();

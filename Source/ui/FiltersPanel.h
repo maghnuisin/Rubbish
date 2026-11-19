@@ -4,7 +4,7 @@
 
 namespace rubbish
 {
-    /** Low Cut and High Cut, each with its Peak knob beside it, and Filter Follow.
+    /** One row: Low Cut and its Peak, High Cut and its Peak, then Filter Follow.
         (Filter Order is the swap button between the panels.) */
     class FiltersPanel final : public juce::Component
     {
@@ -14,8 +14,9 @@ namespace rubbish
         void paint (juce::Graphics& g) override;
         void resized() override;
 
+        static constexpr int preferredWidth = 380;
+
     private:
-        static void placeKnobPair (juce::Rectangle<int> row, LabelledKnob& cutoff, LabelledKnob& peak);
 
         LabelledKnob lowCutKnob;
         LabelledKnob lowPeakKnob;

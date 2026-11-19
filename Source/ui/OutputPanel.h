@@ -15,6 +15,8 @@ namespace rubbish
         void paint (juce::Graphics& g) override;
         void resized() override;
 
+        static constexpr int preferredWidth = 380;
+
     private:
         void layOutKnobs (juce::Rectangle<int> area);
         void layOutToggles (juce::Rectangle<int> area);

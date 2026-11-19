@@ -9,7 +9,7 @@
 namespace rubbish
 {
     /** The Twist strip: the moving display across the top, and underneath it the
-        Twist and Sync toggles, Bell 1 / 2 / 3 tabs, and the selected bell's controls. */
+        Twist and Sync toggles beside three rows of controls, one row per bell. */
     class TwistPanel final : public juce::Component
     {
     public:
@@ -21,18 +21,19 @@ namespace rubbish
     private:
         static constexpr int numBells = 3;
         static constexpr int toggleWidth = 90;
-        static constexpr int tabWidth = 70;
-        static constexpr int controlsHeight = 110;
+        static constexpr int headerHeight = 18;
+        static constexpr int rowHeight = 50;
+        static constexpr int controlsHeight = headerHeight + numBells * rowHeight;
 
-        void configureTabs();
-        void selectBell (int bellIndex);
+        void createColumnNames();
         void showSyncMode (float syncValue);
+        void layOutControls (juce::Rectangle<int> area);
 
         TwistDisplay display;
         juce::TextButton twistButton { "Twist" };
         juce::TextButton syncButton { "Sync" };
-        std::array<juce::TextButton, numBells> bellTabs;
-        std::array<std::unique_ptr<TwistBellControls>, numBells> bellControls;
+        juce::OwnedArray<juce::Label> columnNames;
+        std::array<std::unique_ptr<TwistBellControls>, numBells> bellRows;
 
         juce::AudioProcessorValueTreeState::ButtonAttachment twistAttachment;
         juce::AudioProcessorValueTreeState::ButtonAttachment syncAttachment;

@@ -36,12 +36,12 @@ Per bell (3 bells, each with its own colour; defaults listed as Bell 1 / Bell 2 
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
 | Freq | 20 Hz–20 kHz | 200 Hz / 700 Hz / 2 kHz | Bell's home position |
-| Gain | −24 to +24 dB | +12 / −15 / +12 dB | Boost or cut |
-| Q | 0.1–10 | 0.5 / 0.5 / 0.5 | Bell width; lower = wider |
+| Gain | −24 to +24 dB | 0 / 0 / 0 dB | Boost or cut |
+| Q | 0–100% | 37.5% / 37.5% / 37.5% | Bell width, shown as a percentage: 0% = Q 0.20 (widest), 100% = Q 1.00 (narrowest) |
 | Shape | Smooth / Triangle / Ramp / Random wander | Smooth | LFO shape |
 | Speed (Sync on) | 1/16T, 1/16, 1/16D, 1/8T, 1/8, 1/8D, 1/4T, 1/4, 1/4D, 1/2T, 1/2, 1/2D, 1, 2, 4, 8 bars | 1 bar / 2 bars / 1/2 | Shortest to longest. T = triplet (⅔ length), D = dotted (1½ × length) |
 | Speed (Sync off) | 0.01–10 Hz | 0.5 / 0.3 / 0.8 Hz | One Speed knob shows whichever applies |
-| Move | −100% to +100% | +40% / −40% / +30% | How far the LFO sweeps the bell's frequency; negative sweeps the opposite way; 0% = bell stays still |
+| Move | −100% to +100% | 0% / 0% / 0% | How far the LFO sweeps the bell's frequency; negative sweeps the opposite way; 0% = bell stays still |
 | Start | 0–360° | 0° / 120° / 240° | LFO start phase |
 
 ### Output panel
@@ -80,7 +80,7 @@ Per bell (3 bells, each with its own colour; defaults listed as Bell 1 / Bell 2 
   - Twist display fills the strip from left to right.
   - Display shows the three bells moving live in their colours, the combined EQ curve, and a faint bar under each bell showing how far it can roam.
   - Each bell has a coloured dot: drag left/right = Freq, drag up/down = Gain, scroll wheel = Q. Dots and knobs always stay in sync.
-  - One row of controls under the display: Twist and Sync toggles, Bell 1 / 2 / 3 tabs, then the selected bell's Freq, Gain, Q, Speed, Move and Start knobs and Shape dropdown.
+  - Under the display: Twist and Sync toggles on the left, then three rows of small controls, one row per bell (all visible at once, no tabs), each with the bell's coloured name and its Freq, Gain, Q, Speed, Move and Start knobs and Shape dropdown. Column names appear once, above the rows.
 - Below the Twist strip, three compact panels, left to right, following signal flow: **Drive | Filters | Output**, each with its knobs in a single row where possible.
 - Drive panel: Drive knob (biggest knob in the lower panels), Character dropdown, Push toggle, Clean Low small knob.
 - Filters panel: Low Cut knob with its Peak knob beside it; High Cut knob with its Peak knob beside it; Filter Follow knob.

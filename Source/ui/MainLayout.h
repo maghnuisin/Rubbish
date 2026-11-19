@@ -24,12 +24,14 @@ namespace rubbish
 
         void resized() override;
 
-        static constexpr int designWidth = 1020;
-        static constexpr int twistHeight = 360;
-        static constexpr int designHeight = 560 + twistHeight;
+        static constexpr int designWidth = 1140;
+        static constexpr int twistHeight = 420;
+        static constexpr int lowerHeight = 250;
+        static constexpr int designHeight = twistHeight + lowerHeight;
 
     private:
         void showFilterOrder (float orderIndex);
+        void layOutLowerPanels (juce::Rectangle<int> area);
 
         static constexpr int panelGap = 10;
 

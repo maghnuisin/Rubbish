@@ -140,26 +140,22 @@ namespace rubbish
 
         struct TwistBellDefaults
         {
-            float freqHz, gainDb, q;
+            float freqHz, gainDb, qPercent;
             int syncSpeedIndex;
             float freeSpeedHz, movePercent, startDegrees;
         };
 
-        // Bell 1 / 2 / 3 defaults from prd.md: boost, cut, boost, moving at different speeds.
+        // Bell 1 / 2 / 3 defaults from prd.md: flat (0 dB) and still (0% Move) until you
+        // dial them in, with different speeds and start points ready for when they move.
         constexpr TwistBellDefaults twistDefaults[numTwistBells] {
-            { 200.0f,  12.0f, 0.5f, 12, 0.5f,  40.0f,   0.0f }, // 1 bar
-            { 700.0f, -15.0f, 0.5f, 13, 0.3f, -40.0f, 120.0f }, // 2 bars
-            { 2000.0f, 12.0f, 0.5f, 10, 0.8f,  30.0f, 240.0f }  // 1/2
+            { 200.0f,  0.0f, 37.5f, 12, 0.5f, 0.0f,   0.0f }, // 1 bar
+            { 700.0f,  0.0f, 37.5f, 13, 0.3f, 0.0f, 120.0f }, // 2 bars
+            { 2000.0f, 0.0f, 37.5f, 10, 0.8f, 0.0f, 240.0f }  // 1/2
         };
 
         juce::ParameterID twistID (const juce::String& id)
         {
             return juce::ParameterID { id, twistParameterVersion };
-        }
-
-        juce::String formatQ (float value, int)
-        {
-            return juce::String (value, 2);
         }
 
         juce::String formatHertz (float value, int)
@@ -200,7 +196,7 @@ namespace rubbish
                 "bell" + juce::String (bellIndex + 1), prefix.trim(), "|",
                 makeTwistFloat (ids.freq, prefix + "Freq", makeFrequencyRange (20.0f, 20000.0f), d.freqHz, "Hz", formatFrequency),
                 makeTwistFloat (ids.gain, prefix + "Gain", { -24.0f, 24.0f, 0.01f }, d.gainDb, "dB", formatDecibels),
-                makeTwistFloat (ids.q, prefix + "Q", makeLogRange (0.1f, 10.0f, 0.001f), d.q, "", formatQ),
+                makeTwistFloat (ids.q, prefix + "Q", { 0.0f, 100.0f, 0.1f }, d.qPercent, "%", formatPercent),
                 std::make_unique<juce::AudioParameterChoice> (twistID (ids.shape), prefix + "Shape", twistShapeNames, 0),
                 std::make_unique<juce::AudioParameterChoice> (twistID (ids.speedSync), prefix + "Speed (Sync)",
                                                               twistSyncSpeedNames, d.syncSpeedIndex),
