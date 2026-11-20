@@ -10,6 +10,13 @@ Status key: 🔴 open · 🟡 in progress · ✅ done · 📋 → prd v2 · 💤
 
 <!-- sessions below, newest first -->
 
+## 2026-11-20: Twist vs Leon's sound, Logic
+
+| # | Type | Status | What I noticed (owner's words) | Source & settings | Priority | Notes / outcome |
+|---|---|---|---|---|---|---|
+| 1 | Tuning | 🔴 open | "Not getting as good a result as Leon even though my source sound is very similar… His sounds a lot more morphing is happening. Mine sounds a bit harsh in the highs. It also sounds like not enough modulation is happening, the sound is not getting filtered as hard, producing the same musical and rhythmic sounds." | Reese-style source · Twist on · various Move / Q / Speed | annoying | Likely causes: (a) Leon's chain is Saturator → moving EQ → **second Saturator → hard Compressor**; Rubbish has nothing driven after Twist, so boosts get louder instead of re-distorting and squashing into new tones. (b) Move at 100% sweeps only ±3 octaves (internal setting); Ableton's LFO on EQ Eight can sweep much wider. (c) Leon then resamples and replays the result. Next: owner tries Logic test (ChromaGlow + Compressor after Rubbish) to confirm before any change. |
+| 2 | Tuning | 💤 parked | "Maybe the Move parameter should have a bigger range." → after trying: "I don't know if that's better or not, it sounds worse… let's revert back." | Twist · Move | annoying | Tried ±5 octaves (was ±3); owner preferred ±3, so reverted to ±3. The real gap is probably note 1 (no drive/compression after Twist) — carry into version 3 planning. |
+
 ## 2026-11-18: first session, new feature idea
 
 | # | Type | Status | What I noticed (owner's words) | Source & settings | Priority | Notes / outcome |

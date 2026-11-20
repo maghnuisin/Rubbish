@@ -70,7 +70,7 @@ namespace rubbish
 
         static constexpr double smoothingSeconds = 0.05;
         static constexpr double onOffFadeSeconds = 0.02;
-        static constexpr float maxSweepOctaves = 3.0f; // Move at 100% sweeps 3 octaves each way
+        static constexpr float maxSweepOctaves = 3.0f; // Move at 100% sweeps 3 octaves each way (5 was tried and sounded worse)
 
         std::array<Voice, numBells> voices { Voice { 1 }, Voice { 2 }, Voice { 3 } };
         TwistClock clock;
