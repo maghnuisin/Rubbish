@@ -6,15 +6,24 @@ Your notebook for testing Rubbish. Each listening session gets a section, newest
 - **Tuning**: it works, but the amount, speed or feel is off.
 - **Idea**: something new, not in prd.md yet.
 
-Status key: 🔴 open · 🟡 in progress · ✅ done · 📋 → prd v2 · 💤 parked
+Status key: 🔴 open · 🟡 in progress · ✅ done · 📋 → prd v2 · 📋 → prd v3 · 💤 parked
 
 <!-- sessions below, newest first -->
+
+## 2026-11-20: version 3 planning (no listening)
+
+| # | Type | Status | What I noticed (owner's words) | Source & settings | Priority | Notes / outcome |
+|---|---|---|---|---|---|---|
+| 1 | Idea | 📋 → prd v3 | "It should add more options with the lfo. We should be able to do a curved lfo where it can oscillate up faster than down and vice versa." | Twist LFOs | not yet set | Added as **Curve** (−100% to +100%). Owner also picked Smooth, Jitter, Offset and Unipolar from Ableton's LFO; Steps, Hold, Retrigger, Rate multiplier and faster speeds shelved. |
+| 2 | Idea | 📋 → prd v3 | "We should be able to map the lfo for each bell to other parameters, for example the drive on the distortion." | Twist LFOs · Drive | not yet set | Any of the 20 knobs can take an LFO, no connection limit, amount set per ring. Brings in LFOs moving Gain or Q and a separate Sync per LFO (both were shelved). |
+| 3 | Idea | 📋 → prd v3 | "A dedicated lfo section with 3 lfos… dragged onto parameters including the freq of each bell in twist… each freq parameter in twist should have an lfo assigned to it by default… Think about a simplified serum for the UI… view each lfo's controls simultaneously." | Layout | not yet set | New LFO section beside a slimmer Bells table (Freq, Gain, Q). Move removed from the bells; the ring amount replaces it. Mockup approved in principle. |
+| 4 | Idea | 💤 parked | "It can apply drastic and cool effects for short intervals (for example 1/8 note to 1/1 note)… Tape stops and slow downs and bit crush+gate fx. We can use an lfo to control the interval it turns on and off - like a one shot lfo." | — | not yet set | Owner: hold for the next version. Decided so far: Tape stop, Slow down, Bitcrush + Gate, Stutter/Repeat, Reverse, Tape start; started by a repeating pattern and a one-shot button. Listed in prd.md Out of Scope. |
 
 ## 2026-11-20: Twist vs Leon's sound, Logic
 
 | # | Type | Status | What I noticed (owner's words) | Source & settings | Priority | Notes / outcome |
 |---|---|---|---|---|---|---|
-| 1 | Tuning | 🔴 open | "Not getting as good a result as Leon even though my source sound is very similar… His sounds a lot more morphing is happening. Mine sounds a bit harsh in the highs. It also sounds like not enough modulation is happening, the sound is not getting filtered as hard, producing the same musical and rhythmic sounds." | Reese-style source · Twist on · various Move / Q / Speed | annoying | Likely causes: (a) Leon's chain is Saturator → moving EQ → **second Saturator → hard Compressor**; Rubbish has nothing driven after Twist, so boosts get louder instead of re-distorting and squashing into new tones. (b) Move at 100% sweeps only ±3 octaves (internal setting); Ableton's LFO on EQ Eight can sweep much wider. (c) Leon then resamples and replays the result. Next: owner tries Logic test (ChromaGlow + Compressor after Rubbish) to confirm before any change. |
+| 1 | Tuning | 📋 → prd v3 | "Not getting as good a result as Leon even though my source sound is very similar… His sounds a lot more morphing is happening. Mine sounds a bit harsh in the highs. It also sounds like not enough modulation is happening, the sound is not getting filtered as hard, producing the same musical and rhythmic sounds." | Reese-style source · Twist on · various Move / Q / Speed | annoying | Likely causes: (a) Leon's chain is Saturator → moving EQ → **second Saturator → hard Compressor**; Rubbish has nothing driven after Twist, so boosts get louder instead of re-distorting and squashing into new tones. (b) Move at 100% sweeps only ±3 octaves (internal setting); Ableton's LFO on EQ Eight can sweep much wider. (c) Leon then resamples and replays the result. Next: owner tries Logic test (ChromaGlow + Compressor after Rubbish) to confirm before any change. **v3 planning (2026-11-20):** owner chose richer LFOs (Curve, mapping to any knob) over a drive-and-squash stage after Twist; that stage is listed as shelved. |
 | 2 | Tuning | 💤 parked | "Maybe the Move parameter should have a bigger range." → after trying: "I don't know if that's better or not, it sounds worse… let's revert back." | Twist · Move | annoying | Tried ±5 octaves (was ±3); owner preferred ±3, so reverted to ±3. The real gap is probably note 1 (no drive/compression after Twist) — carry into version 3 planning. |
 
 ## 2026-11-18: first session, new feature idea
