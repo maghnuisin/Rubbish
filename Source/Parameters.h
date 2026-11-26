@@ -26,18 +26,42 @@ namespace rubbish
         inline constexpr auto delta       = "delta";
 
         inline constexpr auto twist     = "twist";
-        inline constexpr auto twistSync = "twistSync";
     }
 
     inline constexpr int numTwistBells = 3;
 
+    inline constexpr int numLfos = 3;
+
     /** IDs for one Twist bell's parameters, e.g. "bell1Freq". bellIndex is 0-based. */
     struct TwistBellIDs
     {
-        juce::String freq, gain, q, shape, speedSync, speedFree, move, start;
+        juce::String freq, gain, q;
     };
 
     TwistBellIDs getTwistBellIDs (int bellIndex);
+
+    /** IDs for one LFO's own settings, e.g. "lfo1Curve". lfoIndex is 0-based. */
+    struct LfoIDs
+    {
+        juce::String shape, curve, sync, speedSync, speedFree, start, smooth, jitter, offset, unipolar;
+    };
+
+    LfoIDs getLfoIDs (int lfoIndex);
+
+    /** The 20 knobs an LFO can move, in a fixed order (bells first, then the panels). */
+    inline constexpr int numModTargets = 20;
+    const juce::StringArray& getModTargetIDs();
+
+    /** Index into getModTargetIDs() for a bell's Freq, Gain or Q. */
+    inline constexpr int bellFreqTarget (int bellIndex) noexcept { return bellIndex * 3; }
+    inline constexpr int bellGainTarget (int bellIndex) noexcept { return bellIndex * 3 + 1; }
+    inline constexpr int bellQTarget (int bellIndex) noexcept    { return bellIndex * 3 + 2; }
+
+    /** The ring amount for one LFO on one knob, e.g. "lfo2ToDrive". */
+    juce::String getModAmountID (int lfoIndex, int targetIndex);
+
+    /** A ring at 100% on a bell's Freq sweeps this far each way. (5 was tried and sounded worse.) */
+    inline constexpr float maxBellSweepOctaves = 3.0f;
 
     /** Twist's Q knob is shown as 0-100%: 0% = Q 0.20 (widest), 100% = Q 1.00 (narrowest). */
     inline constexpr float twistMinQ = 0.2f;
@@ -51,6 +75,7 @@ namespace rubbish
 
     inline constexpr int parameterVersion = 1;
     inline constexpr int twistParameterVersion = 2; // parameters added in version 2
+    inline constexpr int lfoParameterVersion = 3;   // parameters added in version 3
 
     /** Speed (Sync on) choices, shortest to longest. T = triplet, D = dotted.
         Must match the order of TwistClock's cycle lengths. */

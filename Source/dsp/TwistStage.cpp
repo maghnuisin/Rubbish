@@ -1,25 +1,29 @@
 #include "TwistStage.h"
+#include "Parameters.h"
 
 #include <cmath>
 
 namespace rubbish
 {
+    namespace
+    {
+        float movementAt (const float* movement, size_t index) noexcept
+        {
+            return movement != nullptr ? movement[index] : 0.0f;
+        }
+    }
+
     void TwistStage::prepare (const juce::dsp::ProcessSpec& spec)
     {
-        sampleRate = spec.sampleRate;
-        clock.prepare (sampleRate);
-
         for (auto& voice : voices)
         {
             voice.bell.prepare (spec);
-            voice.lfo.prepare (sampleRate);
-            voice.frequencyHz.reset (sampleRate, smoothingSeconds);
-            voice.gainDb.reset (sampleRate, smoothingSeconds);
-            voice.q.reset (sampleRate, smoothingSeconds);
-            voice.move.reset (sampleRate, smoothingSeconds);
+            voice.frequencyHz.reset (spec.sampleRate, smoothingSeconds);
+            voice.gainDb.reset (spec.sampleRate, smoothingSeconds);
+            voice.qPercent.reset (spec.sampleRate, smoothingSeconds);
         }
 
-        wet.reset (sampleRate, onOffFadeSeconds);
+        wet.reset (spec.sampleRate, onOffFadeSeconds);
         reset();
     }
 
@@ -29,15 +33,12 @@ namespace rubbish
         for (auto& voice : voices)
         {
             voice.bell.reset();
-            voice.lfo.reset();
             voice.frequencyHz.setCurrentAndTargetValue (voice.frequencyHz.getTargetValue());
             voice.gainDb.setCurrentAndTargetValue (voice.gainDb.getTargetValue());
-            voice.q.setCurrentAndTargetValue (voice.q.getTargetValue());
-            voice.move.setCurrentAndTargetValue (voice.move.getTargetValue());
+            voice.qPercent.setCurrentAndTargetValue (voice.qPercent.getTargetValue());
         }
 
         wet.setCurrentAndTargetValue (wet.getTargetValue());
-        restartFreePhases();
         bellsNeedClearing = false;
     }
 
@@ -52,28 +53,8 @@ namespace rubbish
         auto& voice = voices[static_cast<size_t> (juce::jlimit (0, numBells - 1, bellIndex))];
 
         voice.frequencyHz.setTargetValue (juce::jlimit (20.0f, 20000.0f, settings.frequencyHz));
-        voice.gainDb.setTargetValue (settings.gainDb);
-        voice.q.setTargetValue (juce::jlimit (0.1f, 10.0f, settings.q));
-        voice.move.setTargetValue (juce::jlimit (-1.0f, 1.0f, settings.move));
-        voice.lfo.setShape (settings.shape);
-        voice.syncSpeedIndex = settings.syncSpeedIndex;
-        voice.freeSpeedHz = juce::jmax (0.0f, settings.freeSpeedHz);
-        voice.startCycles = settings.startCycles;
-    }
-
-    void TwistStage::setTransport (const TwistTransport& transport) noexcept
-    {
-        clock.setTransport (transport);
-
-        // "Sync off" runs freely from when playback starts.
-        if (clock.takePlaybackStarted())
-            restartFreePhases();
-    }
-
-    void TwistStage::restartFreePhases() noexcept
-    {
-        for (auto& voice : voices)
-            voice.freePhase = 0.0;
+        voice.gainDb.setTargetValue (juce::jlimit (-24.0f, 24.0f, settings.gainDb));
+        voice.qPercent.setTargetValue (juce::jlimit (0.0f, qRangePercent, settings.qPercent));
     }
 
     bool TwistStage::isFullyOff() const noexcept
@@ -81,53 +62,40 @@ namespace rubbish
         return ! wet.isSmoothing() && wet.getTargetValue() <= 0.0f;
     }
 
-    // Keeps time moving while off, so switching on lands in the right place.
-    void TwistStage::skipWhileOff (size_t numSamples) noexcept
+    void TwistStage::skipWhileOff() noexcept
     {
-        clock.advance (static_cast<int> (numSamples));
-
-        for (auto& voice : voices)
-            voice.freePhase += voice.freeSpeedHz * static_cast<double> (numSamples) / sampleRate;
-
         for (auto& voice : voices)
             voice.currentFrequencyHz = voice.frequencyHz.getTargetValue();
 
         if (bellsNeedClearing)
         {
             for (auto& voice : voices)
-            {
                 voice.bell.reset();
-                voice.lfo.reset();
-            }
 
             bellsNeedClearing = false;
         }
     }
 
-    double TwistStage::nextCyclePosition (Voice& voice) noexcept
+    // Rings can never push a bell past its own knob's range.
+    void TwistStage::updateBellShape (Voice& voice, const TwistBellMovement& movement, size_t index) noexcept
     {
-        if (synced)
-            return clock.getBeats() / clock.getCycleLengthInBeats (voice.syncSpeedIndex) + voice.startCycles;
+        const auto sweepOctaves = movementAt (movement.frequency, index) * maxBellSweepOctaves;
+        const auto frequency = juce::jlimit (20.0f, voice.bell.getMaxFrequencyHz(),
+                                             voice.frequencyHz.getNextValue() * std::exp2 (sweepOctaves));
+        const auto gain = juce::jlimit (-24.0f, 24.0f,
+                                        voice.gainDb.getNextValue() + movementAt (movement.gain, index) * gainRangeDb);
+        const auto qPercent = juce::jlimit (0.0f, qRangePercent,
+                                            voice.qPercent.getNextValue() + movementAt (movement.q, index) * qRangePercent);
 
-        const auto position = voice.freePhase + voice.startCycles;
-        voice.freePhase += voice.freeSpeedHz / sampleRate;
-        return position;
+        voice.currentFrequencyHz = frequency;
+        voice.bell.setShape (frequency, gain, twistQPercentToQ (qPercent));
     }
 
-    void TwistStage::updateBellShape (Voice& voice) noexcept
+    void TwistStage::processFrame (juce::dsp::AudioBlock<float>& block, size_t index, float wetAmount,
+                                   const Movement& movement) noexcept
     {
-        const auto lfoValue = voice.lfo.next (nextCyclePosition (voice));
-        const auto sweepOctaves = voice.move.getNextValue() * maxSweepOctaves * lfoValue;
-        const auto frequency = voice.frequencyHz.getNextValue() * std::exp2 (sweepOctaves);
-        voice.currentFrequencyHz = juce::jlimit (20.0f, voice.bell.getMaxFrequencyHz(), frequency);
-
-        voice.bell.setShape (frequency, voice.gainDb.getNextValue(), voice.q.getNextValue());
-    }
-
-    void TwistStage::processFrame (juce::dsp::AudioBlock<float>& block, size_t index, float wetAmount) noexcept
-    {
-        for (auto& voice : voices)
-            updateBellShape (voice);
+        for (size_t bell = 0; bell < voices.size(); ++bell)
+            updateBellShape (voices[bell], movement[bell], index);
 
         for (size_t ch = 0; ch < block.getNumChannels(); ++ch)
         {
@@ -140,8 +108,6 @@ namespace rubbish
 
             samples[index] = dry + wetAmount * (twisted - dry);
         }
-
-        clock.advance();
     }
 
     float TwistStage::getCurrentFrequencyHz (int bellIndex) const noexcept
@@ -149,19 +115,17 @@ namespace rubbish
         return voices[static_cast<size_t> (juce::jlimit (0, numBells - 1, bellIndex))].currentFrequencyHz;
     }
 
-    void TwistStage::process (juce::dsp::AudioBlock<float>& block) noexcept
+    void TwistStage::process (juce::dsp::AudioBlock<float>& block, const Movement& movement) noexcept
     {
-        const auto numSamples = block.getNumSamples();
-
         if (isFullyOff())
         {
-            skipWhileOff (numSamples);
+            skipWhileOff();
             return;
         }
 
         bellsNeedClearing = true;
 
-        for (size_t i = 0; i < numSamples; ++i)
-            processFrame (block, i, wet.getNextValue());
+        for (size_t i = 0; i < block.getNumSamples(); ++i)
+            processFrame (block, i, wet.getNextValue(), movement);
     }
 }

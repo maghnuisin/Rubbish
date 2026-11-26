@@ -40,6 +40,8 @@ target_sources(Rubbish PRIVATE
     Source/PluginEditor.cpp
     Source/Parameters.cpp
     Source/TwistParameterReader.cpp
+    Source/LfoParameterReader.cpp
+    Source/StateMigration.cpp
     Source/dsp/Waveshapers.cpp
     Source/dsp/CharacterShaper.cpp
     Source/dsp/DistortionStage.cpp
@@ -54,7 +56,9 @@ target_sources(Rubbish PRIVATE
     Source/dsp/DynamicsRestore.cpp
     Source/dsp/SafetyLimiter.cpp
     Source/dsp/OutputSection.cpp
-    Source/dsp/TwistLfo.cpp
+    Source/dsp/Lfo.cpp
+    Source/dsp/LfoBank.cpp
+    Source/dsp/ModulationMatrix.cpp
     Source/dsp/TwistClock.cpp
     Source/dsp/TwistBell.cpp
     Source/dsp/TwistStage.cpp

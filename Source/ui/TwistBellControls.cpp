@@ -19,11 +19,13 @@ namespace rubbish
         : freqKnob (state, getTwistBellIDs (bellIndex).freq),
           gainKnob (state, getTwistBellIDs (bellIndex).gain),
           qKnob (state, getTwistBellIDs (bellIndex).q),
-          syncSpeedKnob (state, getTwistBellIDs (bellIndex).speedSync),
-          freeSpeedKnob (state, getTwistBellIDs (bellIndex).speedFree),
-          moveKnob (state, getTwistBellIDs (bellIndex).move),
-          startKnob (state, getTwistBellIDs (bellIndex).start),
-          shapeAttachment (state, getTwistBellIDs (bellIndex).shape, withShapeItems (shapeMenu))
+          syncSpeedKnob (state, getLfoIDs (bellIndex).speedSync),
+          freeSpeedKnob (state, getLfoIDs (bellIndex).speedFree),
+          moveKnob (state, getModAmountID (bellIndex, bellFreqTarget (bellIndex))),
+          startKnob (state, getLfoIDs (bellIndex).start),
+          shapeAttachment (state, getLfoIDs (bellIndex).shape, withShapeItems (shapeMenu)),
+          syncAttachment (state, getLfoIDs (bellIndex).sync, syncButton),
+          syncWatcher (*state.getParameter (getLfoIDs (bellIndex).sync), [this] (float value) { showSyncedSpeed (value >= 0.5f); })
     {
         nameLabel.setText ("Bell " + juce::String (bellIndex + 1), juce::dontSendNotification);
         nameLabel.setColour (juce::Label::textColourId, getTwistBellColour (bellIndex));
@@ -37,12 +39,14 @@ namespace rubbish
         }
 
         addAndMakeVisible (shapeMenu);
-        showSyncedSpeed (true);
+        syncButton.setClickingTogglesState (true);
+        addAndMakeVisible (syncButton);
+        syncWatcher.sendInitialUpdate();
     }
 
     const juce::StringArray& TwistBellControls::getColumnNames()
     {
-        static const juce::StringArray names { "", "Freq", "Gain", "Q", "Speed", "Move", "Start", "Shape" };
+        static const juce::StringArray names { "", "Freq", "Gain", "Q", "Speed", "Move", "Start", "Shape", "" };
         return names;
     }
 
@@ -50,11 +54,13 @@ namespace rubbish
     {
         std::array<juce::Rectangle<int>, numColumns> columns;
         columns[0] = row.removeFromLeft (nameWidth);
-        columns[numColumns - 1] = row.removeFromRight (shapeWidth);
+        columns[numColumns - 1] = row.removeFromRight (syncWidth);
+        columns[numColumns - 2] = row.removeFromRight (shapeWidth);
 
-        const auto knobWidth = row.getWidth() / (numColumns - 2);
-        for (size_t i = 1; i < numColumns - 1; ++i)
-            columns[i] = i == numColumns - 2 ? row : row.removeFromLeft (knobWidth);
+        constexpr size_t numKnobs = numColumns - 3;
+        const auto knobWidth = row.getWidth() / static_cast<int> (numKnobs);
+        for (size_t i = 1; i <= numKnobs; ++i)
+            columns[i] = i == numKnobs ? row : row.removeFromLeft (knobWidth);
 
         return columns;
     }
@@ -75,6 +81,7 @@ namespace rubbish
             knobs[i]->setBounds (columns[i + 1].reduced (4, 0));
 
         freeSpeedKnob.setBounds (syncSpeedKnob.getBounds());
-        shapeMenu.setBounds (columns[numColumns - 1].withSizeKeepingCentre (columns[numColumns - 1].getWidth() - 8, 26));
+        shapeMenu.setBounds (columns[numColumns - 2].withSizeKeepingCentre (columns[numColumns - 2].getWidth() - 8, 26));
+        syncButton.setBounds (columns[numColumns - 1].withSizeKeepingCentre (columns[numColumns - 1].getWidth() - 8, 26));
     }
 }

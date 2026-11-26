@@ -67,7 +67,6 @@ namespace rubbish
 
         static constexpr int refreshRateHz = 30;
         static constexpr float grabRadius = 14.0f;
-        static constexpr float maxSweepOctaves = 3.0f; // matches TwistStage
         static constexpr int curvePoints = 240;
 
         TwistDisplaySource& source;

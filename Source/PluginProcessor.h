@@ -7,11 +7,14 @@
 #include "dsp/FilterOrderSwitch.h"
 #include "dsp/FilterSection.h"
 #include "dsp/LevelMeterSource.h"
+#include "dsp/LfoBank.h"
+#include "dsp/ModulationMatrix.h"
 #include "dsp/LoudnessTracker.h"
 #include "dsp/OutputSection.h"
 #include "dsp/TwistDisplaySource.h"
 #include "dsp/TwistStage.h"
 #include "TwistParameterReader.h"
+#include "LfoParameterReader.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -61,6 +64,8 @@ private:
     void updateSplitAndDynamicsSettings() noexcept;
     void updateTwistSettings() noexcept;
     void updateTwistTransport() noexcept;
+    void updateLfoSettings() noexcept;
+    rubbish::TwistStage::Movement getTwistMovement() const noexcept;
     void publishTwistPositions() noexcept;
     void updateAllSettings() noexcept;
     void processChunk (juce::dsp::AudioBlock<float>& block) noexcept;
@@ -87,6 +92,7 @@ private:
     std::atomic<float>& spreadParam;
     std::atomic<float>& deltaParam;
     rubbish::TwistParameterReader twistParams;
+    rubbish::LfoParameterReader lfoParams;
 
     rubbish::LoudnessTracker inputLoudness;
     rubbish::CleanLowSplitter cleanLow;
@@ -95,6 +101,8 @@ private:
     rubbish::FilterSection filters;
     rubbish::FilterOrderSwitch filterOrderSwitch;
     rubbish::TwistStage twist;
+    rubbish::LfoBank lfos;
+    rubbish::ModulationMatrix modulation;
     rubbish::DynamicsRestore dynamicsRestore;
     rubbish::OutputSection outputSection;
     rubbish::LevelMeterSource inputLevel;

@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "Parameters.h"
+#include "StateMigration.h"
 
 namespace
 {
@@ -33,7 +34,8 @@ RubbishAudioProcessor::RubbishAudioProcessor()
       dynamicsRestoreParam (getRawParameter (parameters, rubbish::ParamIDs::dynamicsRestore)),
       spreadParam (getRawParameter (parameters, rubbish::ParamIDs::spread)),
       deltaParam (getRawParameter (parameters, rubbish::ParamIDs::delta)),
-      twistParams (parameters)
+      twistParams (parameters),
+      lfoParams (parameters)
 {
 }
 
@@ -53,6 +55,8 @@ void RubbishAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     filters.prepare (spec);
     filterOrderSwitch.prepare (sampleRate);
     twist.prepare (spec);
+    lfos.prepare (sampleRate, samplesPerBlock);
+    modulation.prepare (sampleRate, samplesPerBlock);
     dynamicsRestore.prepare (spec, latency);
     outputSection.prepare (spec, latency);
 
@@ -78,6 +82,8 @@ void RubbishAudioProcessor::resetProcessing()
     filters.reset();
     filterOrderSwitch.reset (getRequestedFilterOrder());
     twist.reset();
+    lfos.reset();
+    modulation.reset();
     outputSection.reset();
 }
 
@@ -117,16 +123,39 @@ void RubbishAudioProcessor::updateAllSettings() noexcept
     updateFilterSettings();
     updateSplitAndDynamicsSettings();
     updateTwistSettings();
+    updateLfoSettings();
     updateOutputSettings();
 }
 
 void RubbishAudioProcessor::updateTwistSettings() noexcept
 {
     twist.setEnabled (twistParams.isEnabled());
-    twist.setSynced (twistParams.isSynced());
 
     for (int bell = 0; bell < rubbish::TwistStage::numBells; ++bell)
         twist.setBell (bell, twistParams.readBell (bell));
+}
+
+void RubbishAudioProcessor::updateLfoSettings() noexcept
+{
+    for (int lfo = 0; lfo < rubbish::LfoBank::numLfos; ++lfo)
+    {
+        lfos.setLfo (lfo, lfoParams.readLfo (lfo));
+
+        for (int target = 0; target < rubbish::ModulationMatrix::numTargets; ++target)
+            modulation.setAmount (lfo, target, lfoParams.readAmount (lfo, target));
+    }
+}
+
+rubbish::TwistStage::Movement RubbishAudioProcessor::getTwistMovement() const noexcept
+{
+    rubbish::TwistStage::Movement movement;
+
+    for (int bell = 0; bell < rubbish::TwistStage::numBells; ++bell)
+        movement[static_cast<size_t> (bell)] = { modulation.getModulation (rubbish::bellFreqTarget (bell)),
+                                                 modulation.getModulation (rubbish::bellGainTarget (bell)),
+                                                 modulation.getModulation (rubbish::bellQTarget (bell)) };
+
+    return movement;
 }
 
 void RubbishAudioProcessor::publishTwistPositions() noexcept
@@ -135,7 +164,7 @@ void RubbishAudioProcessor::publishTwistPositions() noexcept
         twistDisplay.publishFrequency (bell, twist.getCurrentFrequencyHz (bell));
 }
 
-// Twist's Sync follows the DAW's tempo and song position.
+// The LFOs' Sync follows the DAW's tempo and song position.
 void RubbishAudioProcessor::updateTwistTransport() noexcept
 {
     rubbish::TwistTransport transport;
@@ -155,7 +184,7 @@ void RubbishAudioProcessor::updateTwistTransport() noexcept
         }
     }
 
-    twist.setTransport (transport);
+    lfos.setTransport (transport);
 }
 
 void RubbishAudioProcessor::updateFilterSettings() noexcept
@@ -237,9 +266,13 @@ void RubbishAudioProcessor::processChunk (juce::dsp::AudioBlock<float>& block) n
 
     const auto* highCutMultipliers = filterFollow.computeCutoffMultipliers (inputLoudness.getEnvelope(),
                                                                             block.getNumSamples());
+    const auto numSamples = static_cast<int> (block.getNumSamples());
+    lfos.render (numSamples);
+    modulation.process (lfos, numSamples);
+
     cleanLow.split (block);
     processDistortionAndFilters (block, highCutMultipliers);
-    twist.process (block);
+    twist.process (block, getTwistMovement());
     publishTwistPositions();
     cleanLow.recombine (block);
 
@@ -263,8 +296,12 @@ void RubbishAudioProcessor::setStateInformation (const void* data, int sizeInByt
 {
     const auto xml = getXmlFromBinary (data, sizeInBytes);
 
-    if (xml != nullptr && xml->hasTagName (parameters.state.getType()))
-        parameters.replaceState (juce::ValueTree::fromXml (*xml));
+    if (xml == nullptr || ! xml->hasTagName (parameters.state.getType()))
+        return;
+
+    auto state = juce::ValueTree::fromXml (*xml);
+    rubbish::upgradeVersion2State (state);
+    parameters.replaceState (state);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

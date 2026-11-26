@@ -28,7 +28,8 @@ namespace rubbish
         {
             const auto ids = getTwistBellIDs (bell);
             bells[static_cast<size_t> (bell)] = { &findParameter (state, ids.freq), &findParameter (state, ids.gain),
-                                                  &findParameter (state, ids.q), &findParameter (state, ids.move) };
+                                                  &findParameter (state, ids.q),
+                                                  &findParameter (state, getModAmountID (bell, bellFreqTarget (bell))) };
         }
 
         startTimerHz (refreshRateHz);
@@ -131,7 +132,7 @@ namespace rubbish
     void TwistDisplay::paintRoamBar (juce::Graphics& g, juce::Rectangle<float> area, int bellIndex,
                                      const BellView& bell) const
     {
-        const auto octaves = std::abs (bell.move) * maxSweepOctaves;
+        const auto octaves = std::abs (bell.move) * maxBellSweepOctaves;
         const auto left = scale::frequencyToX (juce::jmax (scale::minFrequencyHz, bell.homeHz * std::exp2 (-octaves)), area);
         const auto right = scale::frequencyToX (juce::jmin (scale::maxFrequencyHz, bell.homeHz * std::exp2 (octaves)), area);
 

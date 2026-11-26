@@ -16,7 +16,6 @@ namespace rubbish
         explicit TwistParameterReader (juce::AudioProcessorValueTreeState& state);
 
         bool isEnabled() const noexcept;
-        bool isSynced() const noexcept;
         TwistBellSettings readBell (int bellIndex) const noexcept;
 
     private:
@@ -25,17 +24,11 @@ namespace rubbish
             std::atomic<float>* frequency;
             std::atomic<float>* gain;
             std::atomic<float>* q;
-            std::atomic<float>* shape;
-            std::atomic<float>* speedSync;
-            std::atomic<float>* speedFree;
-            std::atomic<float>* move;
-            std::atomic<float>* start;
         };
 
         static BellParameters findBellParameters (juce::AudioProcessorValueTreeState& state, int bellIndex);
 
         std::atomic<float>& enabled;
-        std::atomic<float>& synced;
         std::array<BellParameters, TwistStage::numBells> bells;
     };
 }

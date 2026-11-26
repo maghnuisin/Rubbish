@@ -141,22 +141,14 @@ namespace rubbish
         struct TwistBellDefaults
         {
             float freqHz, gainDb, qPercent;
-            int syncSpeedIndex;
-            float freeSpeedHz, movePercent, startDegrees;
         };
 
-        // Bell 1 / 2 / 3 defaults from prd.md: flat (0 dB) and still (0% Move) until you
-        // dial them in, with different speeds and start points ready for when they move.
+        // Bell 1 / 2 / 3 defaults from prd.md: flat (0 dB) until you dial them in.
         constexpr TwistBellDefaults twistDefaults[numTwistBells] {
-            { 200.0f,  0.0f, 37.5f, 12, 0.5f, 0.0f,   0.0f }, // 1 bar
-            { 700.0f,  0.0f, 37.5f, 13, 0.3f, 0.0f, 120.0f }, // 2 bars
-            { 2000.0f, 0.0f, 37.5f, 10, 0.8f, 0.0f, 240.0f }  // 1/2
+            { 200.0f,  0.0f, 37.5f },
+            { 700.0f,  0.0f, 37.5f },
+            { 2000.0f, 0.0f, 37.5f }
         };
-
-        juce::ParameterID twistID (const juce::String& id)
-        {
-            return juce::ParameterID { id, twistParameterVersion };
-        }
 
         juce::String formatHertz (float value, int)
         {
@@ -176,13 +168,14 @@ namespace rubbish
             return range;
         }
 
-        std::unique_ptr<juce::RangedAudioParameter> makeTwistFloat (const juce::String& id, const juce::String& name,
-                                                                    juce::NormalisableRange<float> range, float defaultValue,
-                                                                    const juce::String& unit,
-                                                                    juce::String (*format) (float, int))
+        std::unique_ptr<juce::RangedAudioParameter> makeFloat (const juce::String& id, int versionHint,
+                                                               const juce::String& name,
+                                                               juce::NormalisableRange<float> range, float defaultValue,
+                                                               const juce::String& unit,
+                                                               juce::String (*format) (float, int))
         {
             return std::make_unique<juce::AudioParameterFloat> (
-                twistID (id), name, range, defaultValue,
+                juce::ParameterID { id, versionHint }, name, range, defaultValue,
                 juce::AudioParameterFloatAttributes().withLabel (unit).withStringFromValueFunction (format));
         }
 
@@ -191,28 +184,93 @@ namespace rubbish
             const auto ids = getTwistBellIDs (bellIndex);
             const auto& d = twistDefaults[bellIndex];
             const auto prefix = "Bell " + juce::String (bellIndex + 1) + " ";
+            constexpr auto v = twistParameterVersion;
 
             return std::make_unique<juce::AudioProcessorParameterGroup> (
                 "bell" + juce::String (bellIndex + 1), prefix.trim(), "|",
-                makeTwistFloat (ids.freq, prefix + "Freq", makeFrequencyRange (20.0f, 20000.0f), d.freqHz, "Hz", formatFrequency),
-                makeTwistFloat (ids.gain, prefix + "Gain", { -24.0f, 24.0f, 0.01f }, d.gainDb, "dB", formatDecibels),
-                makeTwistFloat (ids.q, prefix + "Q", { 0.0f, 100.0f, 0.1f }, d.qPercent, "%", formatPercent),
-                std::make_unique<juce::AudioParameterChoice> (twistID (ids.shape), prefix + "Shape", twistShapeNames, 0),
-                std::make_unique<juce::AudioParameterChoice> (twistID (ids.speedSync), prefix + "Speed (Sync)",
-                                                              twistSyncSpeedNames, d.syncSpeedIndex),
-                makeTwistFloat (ids.speedFree, prefix + "Speed (Free)", makeLogRange (0.01f, 10.0f, 0.001f),
-                                d.freeSpeedHz, "Hz", formatHertz),
-                makeTwistFloat (ids.move, prefix + "Move", { -100.0f, 100.0f, 0.1f }, d.movePercent, "%", formatSignedPercent),
-                makeTwistFloat (ids.start, prefix + "Start", { 0.0f, 360.0f, 1.0f }, d.startDegrees, "deg", formatDegrees));
+                makeFloat (ids.freq, v, prefix + "Freq", makeFrequencyRange (20.0f, 20000.0f), d.freqHz, "Hz", formatFrequency),
+                makeFloat (ids.gain, v, prefix + "Gain", { -24.0f, 24.0f, 0.01f }, d.gainDb, "dB", formatDecibels),
+                makeFloat (ids.q, v, prefix + "Q", { 0.0f, 100.0f, 0.1f }, d.qPercent, "%", formatPercent));
         }
 
         void addTwistParameters (juce::AudioProcessorValueTreeState::ParameterLayout& layout)
         {
-            layout.add (std::make_unique<juce::AudioParameterBool> (twistID (ParamIDs::twist), "Twist", false),
-                        std::make_unique<juce::AudioParameterBool> (twistID (ParamIDs::twistSync), "Twist Sync", true));
+            layout.add (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParamIDs::twist, twistParameterVersion },
+                                                                    "Twist", false));
 
             for (int bell = 0; bell < numTwistBells; ++bell)
                 layout.add (makeTwistBellGroup (bell));
+        }
+
+        // ---- LFO section (version 3) ----
+
+        struct LfoDefaults
+        {
+            int syncSpeedIndex;
+            float freeSpeedHz, startDegrees;
+        };
+
+        // LFO 1 / 2 / 3 defaults from prd.md (the speeds and starts the bells had in version 2).
+        constexpr LfoDefaults lfoDefaults[numLfos] {
+            { 12, 0.5f,   0.0f }, // 1 bar
+            { 13, 0.3f, 120.0f }, // 2 bars
+            { 10, 0.8f, 240.0f }  // 1/2
+        };
+
+        std::unique_ptr<juce::AudioProcessorParameterGroup> makeLfoGroup (int lfoIndex)
+        {
+            const auto ids = getLfoIDs (lfoIndex);
+            const auto& d = lfoDefaults[lfoIndex];
+            const auto prefix = "LFO " + juce::String (lfoIndex + 1) + " ";
+            constexpr auto v = lfoParameterVersion;
+
+            return std::make_unique<juce::AudioProcessorParameterGroup> (
+                "lfo" + juce::String (lfoIndex + 1), prefix.trim(), "|",
+                std::make_unique<juce::AudioParameterChoice> (juce::ParameterID { ids.shape, v }, prefix + "Shape", twistShapeNames, 0),
+                makeFloat (ids.curve, v, prefix + "Curve", { -100.0f, 100.0f, 0.1f }, 0.0f, "%", formatSignedPercent),
+                std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ids.sync, v }, prefix + "Sync", true),
+                std::make_unique<juce::AudioParameterChoice> (juce::ParameterID { ids.speedSync, v }, prefix + "Speed (Sync)",
+                                                              twistSyncSpeedNames, d.syncSpeedIndex),
+                makeFloat (ids.speedFree, v, prefix + "Speed (Free)", makeLogRange (0.01f, 10.0f, 0.001f),
+                           d.freeSpeedHz, "Hz", formatHertz),
+                makeFloat (ids.start, v, prefix + "Start", { 0.0f, 360.0f, 1.0f }, d.startDegrees, "deg", formatDegrees),
+                makeFloat (ids.smooth, v, prefix + "Smooth", { 0.0f, 100.0f, 0.1f }, 0.0f, "%", formatPercent),
+                makeFloat (ids.jitter, v, prefix + "Jitter", { 0.0f, 100.0f, 0.1f }, 0.0f, "%", formatPercent),
+                makeFloat (ids.offset, v, prefix + "Offset", { -100.0f, 100.0f, 0.1f }, 0.0f, "%", formatSignedPercent),
+                std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ids.unipolar, v }, prefix + "Unipolar", false));
+        }
+
+        const juce::StringArray& getModTargetNames()
+        {
+            static const juce::StringArray names { "Bell 1 Freq", "Bell 1 Gain", "Bell 1 Q",
+                                                   "Bell 2 Freq", "Bell 2 Gain", "Bell 2 Q",
+                                                   "Bell 3 Freq", "Bell 3 Gain", "Bell 3 Q",
+                                                   "Drive", "Clean Low", "Low Cut", "Low Peak", "High Cut", "High Peak",
+                                                   "Filter Follow", "Dynamics Restore", "Spread", "Mix", "Output" };
+            return names;
+        }
+
+        // One ring amount per LFO per knob. 0% = connected but not moving.
+        std::unique_ptr<juce::AudioProcessorParameterGroup> makeModAmountGroup (int lfoIndex)
+        {
+            auto group = std::make_unique<juce::AudioProcessorParameterGroup> (
+                "lfo" + juce::String (lfoIndex + 1) + "Amounts", "LFO " + juce::String (lfoIndex + 1) + " Amounts", "|");
+
+            for (int target = 0; target < numModTargets; ++target)
+                group->addChild (makeFloat (getModAmountID (lfoIndex, target), lfoParameterVersion,
+                                            "LFO " + juce::String (lfoIndex + 1) + " to " + getModTargetNames()[target],
+                                            { -100.0f, 100.0f, 0.1f }, 0.0f, "%", formatSignedPercent));
+
+            return group;
+        }
+
+        void addLfoParameters (juce::AudioProcessorValueTreeState::ParameterLayout& layout)
+        {
+            for (int lfo = 0; lfo < numLfos; ++lfo)
+                layout.add (makeLfoGroup (lfo));
+
+            for (int lfo = 0; lfo < numLfos; ++lfo)
+                layout.add (makeModAmountGroup (lfo));
         }
     }
 
@@ -220,8 +278,34 @@ namespace rubbish
     {
         jassert (bellIndex >= 0 && bellIndex < numTwistBells);
         const auto prefix = "bell" + juce::String (bellIndex + 1);
-        return { prefix + "Freq", prefix + "Gain", prefix + "Q", prefix + "Shape",
-                 prefix + "SpeedSync", prefix + "SpeedFree", prefix + "Move", prefix + "Start" };
+        return { prefix + "Freq", prefix + "Gain", prefix + "Q" };
+    }
+
+    LfoIDs getLfoIDs (int lfoIndex)
+    {
+        jassert (lfoIndex >= 0 && lfoIndex < numLfos);
+        const auto prefix = "lfo" + juce::String (lfoIndex + 1);
+        return { prefix + "Shape", prefix + "Curve", prefix + "Sync", prefix + "SpeedSync", prefix + "SpeedFree",
+                 prefix + "Start", prefix + "Smooth", prefix + "Jitter", prefix + "Offset", prefix + "Unipolar" };
+    }
+
+    const juce::StringArray& getModTargetIDs()
+    {
+        static const juce::StringArray ids { "bell1Freq", "bell1Gain", "bell1Q",
+                                             "bell2Freq", "bell2Gain", "bell2Q",
+                                             "bell3Freq", "bell3Gain", "bell3Q",
+                                             ParamIDs::drive, ParamIDs::cleanLow,
+                                             ParamIDs::lowCut, ParamIDs::lowPeak, ParamIDs::highCut, ParamIDs::highPeak,
+                                             ParamIDs::filterFollow, ParamIDs::dynamicsRestore, ParamIDs::spread,
+                                             ParamIDs::mix, ParamIDs::output };
+        return ids;
+    }
+
+    juce::String getModAmountID (int lfoIndex, int targetIndex)
+    {
+        jassert (targetIndex >= 0 && targetIndex < numModTargets);
+        const auto target = getModTargetIDs()[targetIndex];
+        return "lfo" + juce::String (lfoIndex + 1) + "To" + target.substring (0, 1).toUpperCase() + target.substring (1);
     }
 
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout()
@@ -246,6 +330,8 @@ namespace rubbish
                     makeToggle (ParamIDs::delta, "Delta", false));
 
         addTwistParameters (layout);
+        addLfoParameters (layout);
+        jassert (getModTargetIDs().size() == numModTargets);
         return layout;
     }
 }
