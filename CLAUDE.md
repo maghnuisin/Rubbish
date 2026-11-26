@@ -3,6 +3,11 @@
 ## What This Is
 A stereo distortion/saturation audio plugin with resonant MS-20-style filters and distortion that responds to how the sound is played. Full requirements are in `prd.md`. Build only what it specifies.
 
+## Session Routine (always, without being asked)
+- **Start of every session:** read `build-log.md` first, then `prd.md` and the newest section of `testing-notes.md`. Briefly tell the owner where things stand and what's next.
+- **End of every session** (or after any meaningful change, or when the owner says "wrap up"): add a dated entry to the top of `build-log.md` covering what changed, decisions, open questions and next steps. If several changes happen on the same day, update that day's entry rather than adding a new one. Keep it short and in plain language.
+- After changing code, build and install the plugin (or run `Build Rubbish.command`) so the owner only has to reopen Logic.
+
 ## About the Owner
 - The owner has no coding or audio-development background. Explain changes in plain language, keep jargon to a minimum, and say how to hear or test each result.
 - Ask before making any decision that isn't covered by `prd.md`.
