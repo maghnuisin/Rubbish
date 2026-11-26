@@ -66,3 +66,80 @@ Each Rubbish Character's curve was fitted to the tables above (Drive 0–10 mapp
 | Grit + Push | 31 | 39 | 46 | 52 | 57 | 60 | 62 | 63 | 63 | 62 | 62 |
 
 Known gaps vs Decapitator, to be judged by ear: Tube and Grit only fold over gently at the top with Push; Heavy + Push tops out near 80% (Decapitator reaches about 100%); Edge + Push levels off near 45% (Decapitator keeps climbing to about 55%); no Character is as dark on top as Decapitator, which probably has built-in tone shaping.
+
+## P vs Grit at real Logic level (2026-11-26)
+Measured in Logic ("Test rubbish", Bass track: Massive 44 Hz sine reaching the plugin at about −13 dBFS peak). Decapitator P, Punish off, Auto on, Tone centre, filters off, Mix 100%; bounced post-fader to `~/Desktop/P test drive 0…10.wav`. Grit rendered offline with the same sine 8.5 dB hotter (to match the plugin input), Drive = Decapitator step × 3.6 dB, Push off, Auto Gain on. Harmonics in dB relative to the fundamental; THD = H2–H15.
+
+| Drive | P THD % | P H2 | P H3 | P H4 | P H5 | Grit THD % | Grit H2 | Grit H3 | Grit H4 | Grit H5 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | 6 | −25 | −40 | −56 | −62 | 18 | −16 | −24 | −32 | −48 |
+| 1 | 9 | −21 | −37 | −51 | −59 | 21 | −16 | −18 | −26 | −35 |
+| 2 | 10 | −20 | −32 | −44 | −56 | 25 | −20 | −13 | −25 | −24 |
+| 3 | 11 | −20 | −26 | −38 | −55 | 31 | −34 | −11 | −36 | −19 |
+| 4 | 13 | −37 | −18 | −36 | −38 | 37 | −26 | −10 | −28 | −16 |
+| 5 | 25 | −15 | −16 | −27 | −30 | 41 | −19 | −10 | −20 | −16 |
+| 6 | 39 | −10 | −17 | −16 | −48 | 45 | −16 | −10 | −17 | −17 |
+| 7 | 45 | −7 | −33 | −18 | −27 | 48 | −15 | −10 | −15 | −18 |
+| 8 | 57 | −6 | −25 | −13 | −17 | 49 | −14 | −11 | −14 | −19 |
+| 9 | 65 | −4 | −16 | −22 | −18 | 50 | −13 | −11 | −14 | −20 |
+| 10 | 63 | −5 | −17 | −18 | −20 | 51 | −13 | −11 | −14 | −21 |
+
+What it shows:
+- **Drive 0–4:** Grit is 2–3× dirtier than P and dominated by odd harmonics (H3, H5); P stays gentle and mostly 2nd-harmonic. Grit is far too sensitive to input level.
+- **Drive 5–6:** about the same amount, different mix.
+- **Drive 7–10:** P keeps climbing to about 65% and becomes **strongly lopsided**: the 2nd harmonic is almost as loud as the note itself (−4 to −7 dB). Grit levels off at about 50%, stays fairly even-sided (H3 louder than H2) and stops changing. This is the "missing grit" at the top.
+- The original fit (tables above) was done at about −22 dBFS and matched only total THD, so it missed both.
+
+### Continuous Drive sweep (2026-11-26)
+Owner asked for a sweep rather than steps, to catch the detail between whole numbers. Decapitator P (Punish off) Drive was automated 0 → 10 over 16 bars in Logic and bounced (`~/Desktop/P sweep drive 0 to 10.wav`); Grit was swept the same way offline (0 → 36 dB). Every 0.1 Drive step is in `measurements/p-sweep-punish-off.csv` and `measurements/grit-sweep-push-off.csv`. The sweep agrees with the stepped recordings at whole numbers (e.g. Drive 6: 39.4% both ways).
+
+Fine detail in P that the steps half-hid:
+- **0 → 3:** creeps up slowly (7% → 11%), always mostly 2nd harmonic (even harmonics 6–16 dB above odd).
+- **3 → 4.5: a "turnover" zone.** The 2nd harmonic briefly collapses (to −37 dB at 4) and the 3rd takes over, so the tone flips to odd/hollow for a moment, and total distortion even dips (11% → 10% at 3.5) before it takes off.
+- **4.5 → 7:** distortion shoots up (20% → 45%) and swings back to strongly even (2nd harmonic −15 → −7 dB).
+- **7 → 10:** very lopsided and still climbing, peaking about 71% around 9.5 then easing to ~62% at 10; the 2nd harmonic sits only 4–6 dB under the note.
+
+Grit by contrast rises smoothly and steadily from 18% to 49%, is odd-heavy (hollow/buzzy) from 1.5 to 7, never gets the big 2nd harmonic, and barely changes after 7.
+
+### Continuous Drive sweep with Punish / Push on (2026-11-26)
+Same method, Decapitator P with Punish on (`~/Desktop/P Punish sweep drive 0 to 10.wav`) vs Grit with Push on. Data: `measurements/p-sweep-punish-on.csv`, `measurements/grit-sweep-push-on.csv`.
+
+| Drive | P+Punish THD % | P+Punish H2 / H3 dB | Grit+Push THD % | Grit+Push H2 / H3 dB |
+|---|---|---|---|---|
+| 0.5 | 24 | −18 / −14 | 43 | −25 / −9 |
+| 1 | 29 | −13 / −15 | 44 | −22 / −10 |
+| 2 | 44 | −9 / −17 | 45 | −19 / −10 |
+| 3 | 54 | −6 / −33 | 46 | −17 / −10 |
+| 4 | 60 | −5 / −20 | 47 | −16 / −10 |
+| 5 | 63 | −5 / −16 | 48 | −15 / −10 |
+| 6 | 71 | −5 / −16 | 48 | −15 / −10 |
+| 7 | 73 | −4 / −15 | 48 | −15 / −10 |
+| 8 | 68 | −5 / −17 | 48 | −15 / −10 |
+| 9 | 59 | −7 / −28 | 48 | −15 / −10 |
+| 10 | 48 | −12 / −12 | 48 | −15 / −10 |
+
+What it shows:
+- **P + Punish** climbs from about 24% to a peak of about 73% at Drive 7, then **folds back** to about 48% at 10, where the huge 2nd harmonic shrinks and the 3rd/4th catch up (it changes colour rather than just getting louder). It is strongly lopsided (2nd harmonic 4–7 dB under the note) from Drive 3 to 8.
+- **Grit + Push barely responds to Drive at all:** 41–48% across the whole sweep, odd-heavy at the bottom and then frozen from about Drive 4. Push already slams it into its ceiling, so the Drive knob does almost nothing with Push on. No fold-back, no lopsided 2nd harmonic.
+
+## Grit refit (2026-11-26)
+Grit's eight voicing numbers were refitted by computer search against the P sweeps above (Punish off and on, every 0.25 Drive, matching total distortion and the 2nd–5th harmonics), at the real Logic level (about −13 dBFS peak). The structure of the curve is unchanged. Old: `{14.092, 0.133, −0.405, −0.152, 2.484, 0.000, 0.701, 0.900}`; new: `{2.198, 0.319, −0.824, −0.417, 2.166, −1.021, 0.695, 0.950}` (sensitivity dB, bias at 0, bias across Drive, bias from Push, hardness, hardness from Push, bias follows gain, bias limit). The Grit rows in the "Rubbish fit" table above are out of date.
+
+Checked in the full plugin (same sine, same level):
+
+| Drive | P | new Grit | P + Punish | new Grit + Push |
+|---|---|---|---|---|
+| 1 | 9% | 9% | 29% | 34% |
+| 2 | 10% | 11% | 44% | 44% |
+| 3 | 11% | 11% | 54% | 52% |
+| 4 | 13% (hollow dip) | 14% (hollow dip) | 60% | 60% |
+| 5 | 25% | 25% | 63% | 65% |
+| 6 | 39% | 38% | 71% | 69% |
+| 7 | 45% | 50% | 73% | 70% |
+| 8 | 57% | 60% | 68% | 71% |
+| 9 | 65% | 68% | 59% | 70% |
+| 10 | 62% | 73% | 48% | 69% |
+
+The 2nd/3rd harmonic balance follows P too (including the hollow turnover around Drive 3.5–4 and the very lopsided top). Remaining gap: with Push on, P folds back at Drive 9–10 (to about 50%) and Grit stays at about 70%. A version that folded back made low-Drive Push too dirty (40% vs 24%), so it was not used. Never silent from −40 to 0 dBFS input at any Drive/Push.
+
+Note against prd.md: Push on Grit now makes it *more lopsided (even harmonics)* and a softer knee, matching P + Punish, rather than "more odd harmonics"; and the fold-over at the top is weak. Owner to decide whether prd.md's Push wording should change.

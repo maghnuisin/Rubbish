@@ -28,7 +28,9 @@ namespace rubbish
         constexpr Voicing tubeVoicing  {  5.444f, 0.050f, -0.122f,  0.119f, 1.752f, 1.957f, 0.871f, 0.413f };
         constexpr Voicing heavyVoicing {  5.582f, 0.200f, -0.925f, -0.066f, 1.785f, 0.000f, 0.918f, 0.662f };
         constexpr Voicing edgeVoicing  {  8.008f, 0.552f, -1.135f, -0.448f, 7.999f, 0.000f, 0.000f, unlimited };
-        constexpr Voicing gritVoicing  { 14.092f, 0.133f, -0.405f, -0.152f, 2.484f, 0.000f, 0.701f, 0.900f };
+        // Grit was refitted (2026-11-26) to Drive sweeps of P recorded in Logic at a real
+        // bass level (about -13 dBFS peak), matching the harmonic mix, not just the total.
+        constexpr Voicing gritVoicing  {  2.198f, 0.319f, -0.824f, -0.417f, 2.166f, -1.021f, 0.695f, 0.950f };
 
         const Voicing& voicingFor (Character character) noexcept
         {
