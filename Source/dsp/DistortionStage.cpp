@@ -20,7 +20,7 @@ namespace rubbish
         driveGain.setRampDurationSeconds (driveRampSeconds);
 
         const auto factor = oversampling->getOversamplingFactor();
-        shaper.prepare (spec.sampleRate * static_cast<double> (factor));
+        shaper.prepare (spec.sampleRate * static_cast<double> (factor), static_cast<int> (spec.numChannels));
         spread.prepare (spec.sampleRate * static_cast<double> (factor), spec.maximumBlockSize * factor);
         prepareDcBlocker (spec);
         reset();
@@ -43,9 +43,11 @@ namespace rubbish
         dcBlocker.reset();
     }
 
-    void DistortionStage::setDriveDecibels (float newDriveDb) noexcept
+    void DistortionStage::setDrive (const DriveState& newDrive) noexcept
     {
-        driveGain.setGainDecibels (newDriveDb);
+        driveGain.setGainDecibels (newDrive.totalDb);
+        shaper.setDrive (newDrive);
+        spread.setDrive (newDrive);
     }
 
     void DistortionStage::setCharacter (Character newCharacter) noexcept

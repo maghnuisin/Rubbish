@@ -132,7 +132,7 @@ namespace rubbish
             return std::make_unique<juce::AudioParameterChoice> (
                 juce::ParameterID { ParamIDs::character, parameterVersion },
                 "Character",
-                juce::StringArray { "Tape", "Console", "Tube", "Synth" },
+                juce::StringArray { "Tape", "Tube", "Heavy", "Edge", "Grit" }, // order must match rubbish::Character
                 0);
         }
 

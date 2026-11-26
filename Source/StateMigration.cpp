@@ -59,6 +59,39 @@ namespace rubbish
         }
     }
 
+    namespace
+    {
+        const juce::Identifier characterChoicesProperty { "characterChoices" };
+        constexpr int currentCharacterChoices = 2; // 1 = Tape/Console/Tube/Synth, 2 = Tape/Tube/Heavy/Edge/Grit
+
+        int newCharacterIndex (int oldIndex)
+        {
+            constexpr int tape = 0, tube = 1, heavy = 2, edge = 3;
+            constexpr int oldToNew[] { tape, edge, tube, heavy }; // Tape, Console, Tube, Synth
+
+            return juce::isPositiveAndBelow (oldIndex, 4) ? oldToNew[oldIndex] : tape;
+        }
+    }
+
+    void markCurrentCharacterChoices (juce::ValueTree& state)
+    {
+        state.setProperty (characterChoicesProperty, currentCharacterChoices, nullptr);
+    }
+
+    void upgradeCharacterChoices (juce::ValueTree& state)
+    {
+        if (static_cast<int> (state.getProperty (characterChoicesProperty, 1)) >= currentCharacterChoices)
+            return;
+
+        if (auto character = findParam (state, ParamIDs::character); character.isValid())
+        {
+            const auto oldIndex = juce::roundToInt (static_cast<float> (character.getProperty (valueProperty)));
+            character.setProperty (valueProperty, newCharacterIndex (oldIndex), nullptr);
+        }
+
+        markCurrentCharacterChoices (state);
+    }
+
     void upgradeVersion2State (juce::ValueTree& state)
     {
         if (! isVersion2State (state))

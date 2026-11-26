@@ -37,6 +37,7 @@ RubbishAudioProcessor::RubbishAudioProcessor()
       twistParams (parameters),
       lfoParams (parameters)
 {
+    rubbish::markCurrentCharacterChoices (parameters.state);
 }
 
 void RubbishAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
@@ -99,8 +100,11 @@ bool RubbishAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) 
 
 void RubbishAudioProcessor::updateDistortionSettings() noexcept
 {
-    const auto pushDb = pushParam.load() >= 0.5f ? rubbish::pushBoostDb : 0.0f;
-    distortion.setDriveDecibels (driveParam.load() + pushDb);
+    const auto pushOn = pushParam.load() >= 0.5f;
+    const auto driveDb = driveParam.load();
+    distortion.setDrive ({ driveDb,
+                           driveDb + (pushOn ? rubbish::pushBoostDb : 0.0f),
+                           pushOn ? 1.0f : 0.0f });
 
     const auto characterIndex = juce::jlimit (0, rubbish::numCharacters - 1,
                                               juce::roundToInt (characterParam.load()));
@@ -301,6 +305,7 @@ void RubbishAudioProcessor::setStateInformation (const void* data, int sizeInByt
 
     auto state = juce::ValueTree::fromXml (*xml);
     rubbish::upgradeVersion2State (state);
+    rubbish::upgradeCharacterChoices (state);
     parameters.replaceState (state);
 }
 

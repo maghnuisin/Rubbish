@@ -16,7 +16,8 @@ namespace rubbish
         void prepare (const juce::dsp::ProcessSpec& spec);
         void reset();
 
-        void setDriveDecibels (float newDriveDb) noexcept;
+        /** Drive and Push. Push's extra gain is already included in totalDb. */
+        void setDrive (const DriveState& newDrive) noexcept;
         void setCharacter (Character newCharacter) noexcept;
         void setSpread (float newSpread) noexcept; // 0..1
 

@@ -43,6 +43,7 @@ target_sources(Rubbish PRIVATE
     Source/LfoParameterReader.cpp
     Source/StateMigration.cpp
     Source/dsp/Waveshapers.cpp
+    Source/dsp/CharacterVoicing.cpp
     Source/dsp/CharacterShaper.cpp
     Source/dsp/DistortionStage.cpp
     Source/dsp/ResonantFilter.cpp

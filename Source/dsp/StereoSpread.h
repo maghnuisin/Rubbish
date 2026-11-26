@@ -21,6 +21,7 @@ namespace rubbish
 
         void setAmount (float newAmount) noexcept; // 0..1
         void setCharacter (Character newCharacter) noexcept;
+        void setDrive (const DriveState& newDrive) noexcept;
 
         /** Call with the driven signal, before the main Character shaping. */
         void captureSides (const juce::dsp::AudioBlock<float>& driven) noexcept;

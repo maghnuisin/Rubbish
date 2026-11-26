@@ -1,7 +1,7 @@
 # PRD: Rubbish — Distortion / Saturation Effect (Version 3)
 
 ## Goal
-A stereo distortion/saturation effect inspired by the warmth of tape-and-console saturators and the screaming resonant filters of the MS-20. Its signature: distortion that responds to how the sound is played. A producer should be able to add anything from subtle warmth to aggressive crunch, keep the punch, and keep the low end clean.
+A stereo distortion/saturation effect inspired by the warmth of tape and tube saturators and the screaming resonant filters of the MS-20. Its signature: distortion that responds to how the sound is played. A producer should be able to add anything from subtle warmth to aggressive crunch, keep the punch, and keep the low end clean.
 
 Version 2 adds **Twist**: three EQ bells that move by themselves after the distortion, each driven by its own LFO, so a held note keeps twisting and evolving (inspired by Leon Switch, "Midrange Bass With Ableton Stock Plugins").
 
@@ -13,9 +13,26 @@ Version 3 moves the movement into its own **LFO section**: three LFOs, all visib
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
 | Drive | 0–36 dB | 6 dB | Input gain into the distortion stage |
-| Push | Off / On | Off | Adds +20 dB extra drive |
-| Character | Tape / Console / Tube / Synth | Tape | Dropdown menu. Tape = warm, soft clipping; Console = punchy, forward; Tube = thick, buzzy (asymmetric); Synth = raw, MS-20-style bite |
+| Push | Off / On | Off | Makes the distortion hotter *and* harder (see Push behaviour below) |
+| Character | Tape / Tube / Heavy / Edge / Grit | Tape | Dropdown menu. See Characters below |
 | Clean Low | 20–500 Hz | 20 Hz (effectively off) | Everything below this frequency bypasses the distortion and is recombined cleanly |
+
+### Characters
+Each Character is modelled on one of Soundtoys Decapitator's styles (measurements in `decapitator-analysis.md`) and changes character as Drive is turned, not just level.
+
+| Character | Based on | Sound | How it responds as Drive goes up |
+|---|---|---|---|
+| Tape | A | Warm, soft clipping | Starts with gentle 2nd-harmonic warmth, moves towards odd harmonics as it's pushed, and levels off at a ceiling (squashes like tape rather than getting endlessly dirtier) |
+| Tube | T | Thick, buzzy (asymmetric) | Starts balanced; the asymmetry grows with Drive, so it gets thicker and more even-harmonic the harder it's pushed |
+| Heavy | E | Big, weighty, even-harmonic | Clean at low Drive, then rises steeply. Dominated by the 2nd harmonic (adds weight to bass). No ceiling: keeps getting dirtier all the way up |
+| Edge | N | Clean, then bright and biting | Almost spotless through the lower third of Drive, then breaks up sharply. Odd-harmonic at every setting, with a long bright upper-harmonic tail |
+| Grit | P | Dirty from the start, buzzy | Already adds colour at Drive 0. Even-harmonic and tube-like, but brighter than Tube and the most distortion of any Character without Push |
+
+### Push behaviour
+Modelled on Decapitator's Punish. Push is not just extra gain:
+- **Hotter:** adds +20 dB extra drive. With Push on, Drive at minimum sounds about as distorted as Drive at its midpoint with Push off.
+- **Harder:** shifts every Character towards more odd harmonics and a stronger upper-harmonic tail, without changing its basic personality.
+- **Character-specific top end:** Tape's ceiling rises slightly but still levels off; Heavy and Edge keep getting dirtier to maximum Drive; Tube and Grit **fold over** (distortion peaks around 60–70% of Drive, then eases off at the top).
 
 ### Filters panel
 | Parameter | Range | Default | Notes |
@@ -103,6 +120,10 @@ Connections (the coloured rings):
 - Switching Twist on or off never clicks.
 - Twist volume jumps are handled by the existing Auto Gain and safety limiter (no extra Twist level control).
 - Bells stay stable at every setting, including all three at +24 dB with Push on.
+- Switching Character or Push crossfades so it never clicks.
+- No Character ever collapses to silence: a quiet signal at full Drive and Push stays clearly audible.
+- Projects saved with the old Character list open on the nearest new Character: Tape → Tape, Tube → Tube, Console → Edge, Synth → Heavy.
+- Character acceptance (sine test): with a ~44 Hz sine at about −22 dBFS peak, each Character's Drive sweep (Push off and on) follows the shape and trend of its Decapitator reference curve in `decapitator-analysis.md`, not exact values.
 - Sound-quality acceptance: in blind, volume-matched listening tests on drums, bass, vocals and synth, each Character is judged musically usable, with no audible aliasing at any Drive setting.
 
 ## Interface Layout

@@ -5,7 +5,7 @@ namespace rubbish
     void StereoSpread::prepare (double oversampledRate, size_t maxOversampledBlockSize)
     {
         jassert (oversampledRate > 0.0 && maxOversampledBlockSize > 0);
-        sideShaper.prepare (oversampledRate);
+        sideShaper.prepare (oversampledRate, 1); // the sides are a single channel
         sides.setSize (1, static_cast<int> (maxOversampledBlockSize));
         amount.reset (oversampledRate, smoothingSeconds);
         reset();
@@ -27,6 +27,11 @@ namespace rubbish
     void StereoSpread::setCharacter (Character newCharacter) noexcept
     {
         sideShaper.setCharacter (newCharacter);
+    }
+
+    void StereoSpread::setDrive (const DriveState& newDrive) noexcept
+    {
+        sideShaper.setDrive (newDrive);
     }
 
     bool StereoSpread::isStereo (const juce::dsp::AudioBlock<float>& block) noexcept

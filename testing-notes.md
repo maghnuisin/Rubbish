@@ -10,6 +10,12 @@ Status key: 🔴 open · 🟡 in progress · ✅ done · 📋 → prd v2 · 📋
 
 <!-- sessions below, newest first -->
 
+## 2026-11-26: new Characters from the Decapitator study (no listening yet)
+
+| # | Type | Status | What I noticed (owner's words) | Source & settings | Priority | Notes / outcome |
+|---|---|---|---|---|---|---|
+| 1 | Idea | 🟡 in progress | "Lets add the other modes we have not covered under different names that describe their characteristics. Lets upgrade our push mode to reflect what we've learned." → "Lets replace synth and console since we have many modes now." | Decapitator A/E/N/T/P, sine sweeps (see decapitator-analysis.md) | not yet set | Characters are now **Tape, Tube, Heavy, Edge, Grit** (from A, T, E, N, P). Each curve was fitted to the Decapitator measurements and follows Drive and Push. Push now hardens the curve as well as adding +20 dB. Old projects: Console → Edge, Synth → Heavy. Offline checks: each Character's sine sweep matches its Decapitator curve's shape; no Character goes silent at any level or Drive; Push/Character changes don't click. Known gaps: Tube and Grit only fold over gently at the top with Push (Decapitator folds harder); none of the modes are as dark on top as Decapitator. **Owner reminder from 18 Nov:** Console and Synth with Push were the favourite "full and fat" starting sound for Twist, so compare Heavy and Edge with Push against that memory. Needs a build and listening test. |
+
 ## 2026-11-20: version 3 planning (no listening)
 
 | # | Type | Status | What I noticed (owner's words) | Source & settings | Priority | Notes / outcome |
