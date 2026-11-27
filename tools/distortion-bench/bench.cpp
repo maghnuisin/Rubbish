@@ -150,9 +150,38 @@ static Model makeSineShaper()
     };
 }
 
+// Diode clipper (Serum-style): a resistor feeding a capacitor with two silicon diodes
+// across it, solved as the real circuit (trapezoidal rule + Newton). The diodes give a
+// smooth but firm knee; the capacitor rounds the corners more as the diodes conduct harder,
+// so it gets thick rather than fizzy. Voltages are scaled by the diode's thermal voltage.
+static Model makeDiodeClipper(int oversampledRate)
+{
+    const double cutoffHz = 12000.0, diodeScale = 2.5e-4; // 2*Is*R/(n*Vt) for 1N4148-ish, 2.2k
+    const double voltsPerUnit = 0.045;                     // n*Vt
+    const double h = 0.5 * 2 * M_PI * cutoffHz / oversampledRate;
+    struct State { double v = 0, prevSlope = 0; };
+    auto s = std::make_shared<State>();
+    return [s, h, diodeScale, voltsPerUnit](double x, double drive)
+    {
+        double u = x * dbToGain(3.5 + drive * 36.0) / voltsPerUnit; // ~0.5 V peak at Drive 0, ~30 V at 10
+        double v = s->v;
+        for (int i = 0; i < 8; ++i)
+        {
+            double g = v - s->v - h * ((u - v - diodeScale * std::sinh(v)) + s->prevSlope);
+            double dg = 1 + h * (1 + diodeScale * std::cosh(v));
+            double step = g / dg; v -= step;
+            if (std::fabs(step) < 1e-9) break;
+        }
+        s->prevSlope = u - v - diodeScale * std::sinh(v);
+        s->v = v;
+        return v * voltsPerUnit / 0.5;
+    };
+}
+
 static Model makeModel(const std::string& name)
 {
     if (name == "sine") return makeSineShaper();
+    if (name == "diode") return makeDiodeClipper(48000 * kOs);
     fprintf(stderr, "unknown model %s\n", name.c_str()); exit(1);
 }
 
