@@ -39,6 +39,11 @@ Read this at the start of every session. Add an entry at the end of every sessio
   - Worth remembering for the plugin: any strong folding Character would need the same stereo care (how Spread treats it is a prd question). **Owner kept 1 (wide, left and right folded separately), not 1b.**
 - **Model 2, Diode** (Serum-style): the real diode-clipper circuit (resistor into a capacitor with two silicon diodes across it), solved sample by sample at 8x. Squarer and thicker than P at the top, less bright than the Sine Shaper. File `2 Diode.wav`. Its sides get spikier than P's at Drive 9–10, so it may crackle slightly at the top (a centre-only version wasn't rendered yet). Not yet judged: the owner wants to try the Sine Shaper in Logic first.
 - Owner asked to add the Sine Shaper to the plugin (not started), after pushing everything to GitHub.
+- **GitHub portfolio:** the repo (github.com/maghnuisin/Rubbish) is now public, with topics and a README. For a data-analysis job application, added:
+  - `analysis/`: a reproducible Python pipeline (NumPy/SciPy/matplotlib, own `.venv`). It measures P's harmonics from three recordings (stored as FLAC in `analysis/data/`), renders every Grit version from git history through a NumPy copy of Grit, and scores each one. Validated: it reproduces the earlier P maps within 0.1 dB and the v2 Grit map within 0.06 dB.
+  - `docs/case-study.md`: one-page write-up with charts.
+  - `tools/screenshot/`: a small separate build that saves the plugin window as a PNG (the README image). The plugin's own build is untouched.
+  - **New finding (open):** current Grit (v3) is much cleaner than P below Decapitator Drive 2: its 2nd harmonic is up to ~15 dB lower and total distortion is 1–3% vs P's 6–10%. v1 matched that range best. Worth a listen and possibly a retune.
 
 **Next**
 - Start the own-distortion-modes experiments: research sine shapers and diode-style curves (distortion-dsp skill), make offline listening files for the owner, then update prd.md with the chosen modes.

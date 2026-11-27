@@ -4,7 +4,13 @@
 
 Rubbish covers everything from subtle tape warmth to aggressive crunch. It keeps the punch of the original sound and keeps the low end clean. It is inspired by classic tape and tube saturators and by the resonant filters of the Korg MS-20. It runs as an Audio Unit and VST3 in any DAW (developed and tested in Logic Pro).
 
-Built with C++17 and the [JUCE](https://juce.com) framework by Idiot Audio.
+Built with C++17 and the [JUCE](https://juce.com) framework by Idiot Audio. Measurement and analysis are in Python.
+
+![Rubbish plugin window](docs/images/rubbish-ui.png)
+
+**Case study:** [Matching a commercial saturator with data](docs/case-study.md). It covers how recordings, harmonic analysis and listening tests found why the Grit distortion didn't sound like its reference, and cut the error on the main harmonics from about 12 dB to about 4 dB.
+
+[![Harmonic maps of the reference and two Grit versions](docs/images/harmonic-maps-175hz.png)](docs/case-study.md)
 
 > **Status:** in active development. Version 3 is under way: the movement engine (three LFOs that can be connected to any knob) runs in the audio code, and its on-screen controls are being built.
 
@@ -47,7 +53,7 @@ Three EQ bells after the distortion that sweep by themselves, so a held note kee
 
 The parts that took the most engineering:
 
-- **Distortion matched against a commercial reference.** Each Character was fitted by computer search to measurements of a well-known hardware-style saturator, recorded in Logic: total distortion, the balance of the 2nd to 5th harmonics, the upper-harmonic "tail", and maps of every harmonic up to the 40th across the whole Drive range. The measurement data is in [`measurements/`](measurements) and the analysis is in [`decapitator-analysis.md`](decapitator-analysis.md).
+- **Distortion matched against a commercial reference.** Each Character was fitted by computer search to measurements of a well-known hardware-style saturator, recorded in Logic: total distortion, the balance of the 2nd to 5th harmonics, the upper-harmonic "tail", and maps of every harmonic up to the 40th across the whole Drive range. The write-up is in the [case study](docs/case-study.md). A reproducible Python pipeline (NumPy/SciPy) that measures the recordings, models every version of the distortion and draws the figures is in [`analysis/`](analysis). The raw development notebook is [`decapitator-analysis.md`](decapitator-analysis.md).
 - **Clean distortion with no digital fizz.** The distortion stage runs 4x oversampled (`juce::dsp::Oversampling`), its latency is reported to the host, and a DC blocker removes the offset that lopsided curves create.
 - **Nothing clicks or zips.** Every audio parameter glides (`juce::SmoothedValue`), and changing Character or Push crossfades between curves.
 - **Strict real-time rules.** The audio thread does no memory allocation, locking or blocking.
@@ -91,3 +97,6 @@ cmake --build build --config Release
 The AU and VST3 are copied into your plugin folders after the build. On a Mac you can instead double-click `Build Rubbish.command`, which builds, installs and runs `auval`.
 
 Targets macOS and Windows. Only macOS (Logic Pro) has been tested so far.
+
+### Screenshot tool
+[`tools/screenshot/`](tools/screenshot) renders the plugin window to a PNG without a DAW (used for the image above).
