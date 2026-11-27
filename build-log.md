@@ -31,7 +31,13 @@ Read this at the start of every session. Add an entry at the end of every sessio
 - **Grit retuned in the plugin** (`Source/dsp/CharacterVoicing.cpp`): new numbers, plus two new per-Character settings (how the lopsidedness limit and the knee change across Drive). They are zero for Tape, Tube, Heavy and Edge, so those sound exactly as before. Checked offline: never silent (better than before), no extra aliasing. Built, installed, no warnings, **auval passed**. Not committed.
   - To hear it: quit and reopen Logic, play the bass through Grit and sweep Drive, especially the top half (Rubbish Drive 18–36 dB).
 
+- **New direction (owner, end of day):** design Rubbish's own distortion modes from DSP knowledge and industry practice instead of only copying Decapitator. Owner likes sine shapers (as in Massive) and Serum's diode. New modes aren't in prd.md, so agree them with the owner and add them to prd.md before coding.
+  - Workflow agreed: try models one at a time as offline listening files, keep the ones the owner likes, compare quality against Decapitator P.
+  - Offline test bench added: `tools/distortion-bench/bench.cpp` (no plugin code). It runs the dry bass through a model with Drive swept 0→10 like the P recording, 8x oversampled, then matches loudness to P window by window. Build: `clang++ -std=c++17 -O3 -o bench bench.cpp`; run: `./bench <model> "Clean bass F2.wav" "P sweep bass F2.wav" out.wav 7.9` (+7.9 dB undoes the Logic faders).
+  - **Model 1, Sine Shaper** (Massive-style wavefolder: sin of the driven signal, with antialiasing): gentle warmth at Drive 0 (about P's level), one fold by mid-Drive, two folds each side at 10, much brighter and more metallic than P at the top. File: Desktop → rubbish Test files → `Own distortion models (bass F2, Drive 0 to 10)` → `1 Sine Shaper.wav` next to `0 Decapitator P (reference).wav`. Waiting for the owner's verdict.
+
 **Next**
+- Start the own-distortion-modes experiments: research sine shapers and diode-style curves (distortion-dsp skill), make offline listening files for the owner, then update prd.md with the chosen modes.
 - ~~Run the "harmonics vs Drive" map~~ Done the same day (below).
 - Then: decide on aliasing-style fizz vs prd.md, and investigate P's sweeping notch while Drive moves.
 
