@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <functional>
 #include <string>
@@ -171,17 +172,61 @@ static std::vector<double> windowRms(const Audio& a, size_t hop, size_t win)
     return r;
 }
 
-static void matchLoudness(Audio& out, const Audio& ref)
+// Gain curve that makes `signal` as loud as `target`, measured in 300 ms windows every 10 ms
+// and interpolated sample by sample so the correction itself never clicks.
+static std::vector<double> smoothGainCurve(const Audio& signal, const Audio& target)
 {
-    size_t hop = 480, win = 14400; // 10 ms hop, 300 ms window
-    auto ro = windowRms(out, hop, win), rr = windowRms(ref, hop, win);
-    size_t frames = out.ch[0].size();
+    const size_t hop = 480, win = 14400;
+    auto rs = windowRms(signal, hop, win), rt = windowRms(target, hop, win);
+    size_t windows = std::min(rs.size(), rt.size()), frames = signal.ch[0].size();
+    std::vector<double> g(windows);
+    for (size_t w = 0; w < windows; ++w) g[w] = std::fmin(rs[w] > 1e-6 ? rt[w] / rs[w] : 1.0, 30.0);
+    std::vector<double> curve(frames);
     for (size_t i = 0; i < frames; ++i)
     {
-        size_t w = std::min(i / hop, std::min(ro.size(), rr.size()) - 1);
-        double g = ro[w] > 1e-6 ? rr[w] / ro[w] : 1.0;
-        for (auto& c : out.ch) c[i] *= std::fmin(g, 30.0);
+        size_t w = std::min(i / hop, windows - 1), next = std::min(w + 1, windows - 1);
+        double frac = (i % hop) / (double) hop;
+        curve[i] = g[w] + (g[next] - g[w]) * frac;
     }
+    return curve;
+}
+
+static void applyGain(Audio& a, const std::vector<double>& curve)
+{
+    for (auto& c : a.ch) for (size_t i = 0; i < c.size(); ++i) c[i] *= curve[i];
+}
+
+static std::vector<double> distortChannel(std::vector<double> x, const std::string& modelName, int rate, const std::vector<double>& h)
+{
+    auto up = upsample(x, h);
+    Model model = makeModel(modelName);
+    double dcIn = 0, dcOut = 0, rDc = std::exp(-2 * M_PI * 10.0 / (rate * kOs));
+    for (size_t n = 0; n < up.size(); ++n)
+    {
+        double y = model(up[n], driveAt(n / (double) (rate * kOs)));
+        double hp = y - dcIn + rDc * dcOut; dcIn = y; dcOut = hp; // 10 Hz DC blocker
+        up[n] = hp;
+    }
+    return downsample(up, h, x.size());
+}
+
+static Audio monoOf(const std::vector<double>& x, int rate) { Audio a; a.rate = rate; a.channels = 1; a.ch = { x }; return a; }
+
+// STEREO=centre: distort only the centre (mid); the sides keep their clean shape and
+// follow the centre's level change, so left/right differences are never folded.
+static Audio distortCentreOnly(const Audio& in, const std::string& modelName, const std::vector<double>& h)
+{
+    size_t frames = in.ch[0].size(); std::vector<double> mid(frames), side(frames);
+    for (size_t i = 0; i < frames; ++i) { mid[i] = 0.5 * (in.ch[0][i] + in.ch[1][i]); side[i] = 0.5 * (in.ch[0][i] - in.ch[1][i]); }
+    Audio midOut = monoOf(distortChannel(mid, modelName, in.rate, h), in.rate);
+    auto levelChange = smoothGainCurve(monoOf(mid, in.rate), midOut);
+    Audio out = in;
+    for (size_t i = 0; i < frames; ++i)
+    {
+        double s = side[i] * levelChange[i];
+        out.ch[0][i] = midOut.ch[0][i] + s; out.ch[1][i] = midOut.ch[0][i] - s;
+    }
+    return out;
 }
 
 int main(int argc, char** argv)
@@ -189,23 +234,13 @@ int main(int argc, char** argv)
     if (argc < 5) { fprintf(stderr, "usage: bench model in.wav ref.wav out.wav [inputGainDb]\n"); return 1; }
     Audio in = readWav(argv[2]), ref = readWav(argv[3]);
     double inGain = argc > 5 ? dbToGain(atof(argv[5])) : 1.0;
+    for (auto& c : in.ch) for (double& v : c) v *= inGain;
     auto h = makeLowpass();
+    const char* stereo = getenv("STEREO");
     Audio out = in;
-    for (int c = 0; c < in.channels; ++c)
-    {
-        std::vector<double> x = in.ch[c]; for (double& v : x) v *= inGain;
-        auto up = upsample(x, h);
-        Model model = makeModel(argv[1]);
-        double dcIn = 0, dcOut = 0, rDc = std::exp(-2 * M_PI * 10.0 / (in.rate * kOs));
-        for (size_t n = 0; n < up.size(); ++n)
-        {
-            double y = model(up[n], driveAt(n / (double) (in.rate * kOs)));
-            double hp = y - dcIn + rDc * dcOut; dcIn = y; dcOut = hp; // 10 Hz DC blocker
-            up[n] = hp;
-        }
-        out.ch[c] = downsample(up, h, x.size());
-    }
-    matchLoudness(out, ref);
+    if (stereo && std::string(stereo) == "centre" && in.channels == 2) out = distortCentreOnly(in, argv[1], h);
+    else for (int c = 0; c < in.channels; ++c) out.ch[c] = distortChannel(in.ch[c], argv[1], in.rate, h);
+    if (!getenv("NOMATCH")) applyGain(out, smoothGainCurve(out, ref));
     writeWav24(argv[4], out);
     double peak = 0; for (auto& c : out.ch) for (double v : c) peak = std::fmax(peak, std::fabs(v));
     printf("wrote %s (peak %.2f dBFS)\n", argv[4], 20 * std::log10(peak));
